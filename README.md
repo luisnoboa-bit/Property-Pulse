@@ -1,2 +1,2 @@
 # Property-Pulse
-STR Property Maintenance Management
+STR Property Management
