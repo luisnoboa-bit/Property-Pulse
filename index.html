@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PropertyPulse - Property Maintenance Scheduling</title>
+<style>
+:root{
+  --bg:#0e1117; --bg2:#151a23; --card:#1a212c; --card2:#212a37;
+  --line:#2b3546; --line2:#3a4759;
+  --tx:#e8edf5; --tx2:#9dabc0; --tx3:#6b7a90;
+  --acc:#4f9cf9; --acc2:#3b82f6; --accDim:rgba(79,156,249,.12);
+  --ok:#34d399; --okDim:rgba(52,211,153,.12);
+  --warn:#fbbf24; --warnDim:rgba(251,191,36,.12);
+  --bad:#f87171; --badDim:rgba(248,113,113,.12);
+  --r:10px; --r2:14px;
+  --sh:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--tx);
+  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--acc);text-decoration:none}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- layout ---------- */
+#app{display:flex;min-height:100vh}
+.sidebar{
+  width:230px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{padding:20px 18px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.brandMark{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--acc),#8b5cf6);
+  display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;
+}
+.brandName{font-weight:700;letter-spacing:-.3px;font-size:15px}
+.brandSub{font-size:10.5px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.nav{padding:10px 10px;flex:1;overflow-y:auto}
+.navLabel{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--tx3);padding:12px 8px 6px;font-weight:700}
+.navItem{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:8px 10px;border-radius:8px;border:0;background:transparent;color:var(--tx2);
+  cursor:pointer;font-size:13.5px;font-weight:500;transition:.13s;margin-bottom:1px;
+}
+.navItem:hover{background:var(--card);color:var(--tx)}
+.navItem.on{background:var(--accDim);color:var(--acc);font-weight:600}
+.navIco{width:17px;text-align:center;flex-shrink:0;opacity:.9}
+.navBadge{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center}
+.sideFoot{padding:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx3)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:58px;border-bottom:1px solid var(--line);background:rgba(14,17,23,.85);
+  backdrop-filter:blur(12px);display:flex;align-items:center;gap:14px;padding:0 24px;
+  position:sticky;top:0;z-index:40;
+}
+.pageTitle{font-size:16px;font-weight:650;letter-spacing:-.2px}
+.topSpacer{flex:1}
+.content{padding:24px;max-width:1180px;width:100%;margin:0 auto;flex:1}
+
+/* ---------- atoms ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;justify-content:center;
+  padding:8px 14px;border-radius:8px;border:1px solid var(--line2);
+  background:var(--card2);cursor:pointer;font-size:13.5px;font-weight:600;transition:.13s;white-space:nowrap;
+}
+.btn:hover{background:var(--line);border-color:#4a5a72}
+.btn.pri{background:var(--acc2);border-color:var(--acc2);color:#fff}
+.btn.pri:hover{background:#2f74e0;border-color:#2f74e0}
+.btn.dgr{color:var(--bad);border-color:rgba(248,113,113,.35)}
+.btn.dgr:hover{background:var(--badDim)}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:7px}
+.btn.gho{background:transparent;border-color:transparent;color:var(--tx2)}
+.btn.gho:hover{background:var(--card2);color:var(--tx)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:18px}
+.card+.card{margin-top:14px}
+.cardHd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cardTitle{font-size:14.5px;font-weight:650}
+.cardSub{font-size:12.5px;color:var(--tx3);margin-top:2px;font-weight:400}
+
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:5px}
+.inp{
+  width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--line2);
+  background:var(--bg);transition:.13s;font-size:13.5px;
+}
+.inp:focus{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px var(--accDim)}
+textarea.inp{resize:vertical;min-height:76px;line-height:1.5}
+select.inp{cursor:pointer}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.hint{font-size:11.5px;color:var(--tx3);margin-top:4px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2.5px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px}
+.pill.ok{background:var(--okDim);color:var(--ok)}
+.pill.warn{background:var(--warnDim);color:var(--warn)}
+.pill.bad{background:var(--badDim);color:var(--bad)}
+.pill.neu{background:var(--card2);color:var(--tx2)}
+.pill.acc{background:var(--accDim);color:var(--acc)}
+
+.empty{text-align:center;padding:48px 20px;color:var(--tx3)}
+.empty h3{font-size:15px;color:var(--tx2);margin-bottom:6px;font-weight:600}
+.empty p{font-size:13px;max-width:400px;margin:0 auto 16px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;
+  color:var(--tx3);font-weight:700;padding:0 12px 9px;border-bottom:1px solid var(--line);
+}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover{background:var(--card2)}
+
+/* ---------- dashboard ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:15px 16px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line2)}
+.stat.bad::before{background:var(--bad)} .stat.warn::before{background:var(--warn)}
+.stat.ok::before{background:var(--ok)} .stat.acc::before{background:var(--acc)}
+.statN{font-size:27px;font-weight:750;letter-spacing:-1px;line-height:1.1}
+.statL{font-size:11.5px;color:var(--tx3);margin-top:3px;font-weight:500}
+
+.task{
+  display:flex;gap:13px;align-items:flex-start;padding:13px 15px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--card);margin-bottom:9px;transition:.13s;
+}
+.task:hover{border-color:var(--line2)}
+.task.od{border-left:3px solid var(--bad)}
+.task.soon{border-left:3px solid var(--warn)}
+.task.fut{border-left:3px solid var(--line2)}
+.taskBody{flex:1;min-width:0}
+.taskTop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+.taskName{font-weight:640;font-size:14px}
+.taskMeta{font-size:12px;color:var(--tx3);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.taskMeta b{color:var(--tx2);font-weight:600}
+.dot{opacity:.5}
+.taskActs{display:flex;gap:6px;flex-shrink:0;align-items:center}
+
+.vendorChip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line2);
+  border-radius:7px;padding:4px 9px;font-size:11.5px;margin-top:7px;
+}
+.vendorChip b{font-weight:650}
+
+/* ---------- wizard ---------- */
+.wizWrap{max-width:720px;margin:0 auto}
+.wizSteps{display:flex;gap:6px;margin-bottom:22px}
+.wizStep{flex:1;height:3px;border-radius:3px;background:var(--line)}
+.wizStep.on{background:var(--acc)} .wizStep.done{background:var(--ok)}
+.wizH{font-size:21px;font-weight:700;letter-spacing:-.4px;margin-bottom:5px}
+.wizP{color:var(--tx2);font-size:13.5px;margin-bottom:20px}
+.wizNav{display:flex;gap:10px;justify-content:space-between;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+
+.optGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line2);
+  border-radius:var(--r);background:var(--card);cursor:pointer;transition:.13s;text-align:left;
+}
+.opt:hover{border-color:#4a5a72;background:var(--card2)}
+.opt.on{border-color:var(--acc);background:var(--accDim)}
+.optCk{
+  width:17px;height:17px;border-radius:5px;border:1.5px solid var(--line2);flex-shrink:0;margin-top:1px;
+  display:grid;place-items:center;font-size:11px;color:#fff;transition:.13s;
+}
+.opt.on .optCk{background:var(--acc);border-color:var(--acc)}
+.optT{font-size:13.5px;font-weight:600;line-height:1.3}
+.optD{font-size:11.5px;color:var(--tx3);margin-top:2px;line-height:1.35}
+
+/* ---------- modal ---------- */
+.modalBg{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);
+  z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;
+}
+.modal{
+  background:var(--card);border:1px solid var(--line2);border-radius:16px;
+  width:100%;max-width:560px;box-shadow:var(--sh);animation:pop .16s ease-out;
+}
+@keyframes pop{from{opacity:0;transform:translateY(-8px) scale(.985)}}
+.modalHd{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.modalTitle{font-size:16px;font-weight:680;letter-spacing:-.2px}
+.modalBd{padding:20px}
+.modalFt{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end}
+.x{margin-left:auto;background:0;border:0;color:var(--tx3);cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px}
+.x:hover{background:var(--card2);color:var(--tx)}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.toast{
+  background:var(--card2);border:1px solid var(--line2);border-left:3px solid var(--acc);
+  border-radius:9px;padding:11px 15px;font-size:13px;box-shadow:var(--sh);animation:sl .2s;max-width:340px;
+}
+.toast.ok{border-left-color:var(--ok)} .toast.bad{border-left-color:var(--bad)}
+@keyframes sl{from{opacity:0;transform:translateX(20px)}}
+
+/* ---------- landing ---------- */
+.land{min-height:100vh;display:flex;flex-direction:column;align-items:center;background:var(--bg)}
+.landNav{width:100%;max-width:1100px;padding:20px 24px;display:flex;align-items:center;gap:12px}
+.landHero{max-width:800px;padding:60px 24px 40px;text-align:center}
+.landH1{font-size:44px;font-weight:800;letter-spacing:-1.6px;line-height:1.08;margin-bottom:16px}
+.landH1 em{font-style:normal;background:linear-gradient(120deg,var(--acc),#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.landP{font-size:16.5px;color:var(--tx2);line-height:1.6;max-width:560px;margin:0 auto 28px}
+.landCta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+.btn.lg{padding:12px 22px;font-size:14.5px;border-radius:10px}
+.landFeat{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:960px;padding:24px;width:100%}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:20px;text-align:left}
+.featIco{font-size:20px;margin-bottom:9px}
+.featT{font-weight:650;font-size:14px;margin-bottom:5px}
+.featP{font-size:13px;color:var(--tx2);line-height:1.5}
+.landFoot{padding:36px 24px;color:var(--tx3);font-size:12.5px;text-align:center}
+
+.roleGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.role{padding:16px;border:1px solid var(--line2);border-radius:var(--r);background:var(--card2);cursor:pointer;text-align:left;transition:.13s}
+.role:hover{border-color:var(--acc);background:var(--accDim)}
+.roleT{font-weight:650;font-size:14px;margin-bottom:4px}
+.roleD{font-size:12px;color:var(--tx3);line-height:1.4}
+
+.banner{
+  background:var(--warnDim);border:1px solid rgba(251,191,36,.3);border-radius:var(--r);
+  padding:10px 14px;font-size:12.5px;color:var(--warn);margin-bottom:16px;display:flex;gap:9px;align-items:center;
+}
+.banner .btn{margin-left:auto}
+
+.segs{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+.seg{padding:5px 13px;border-radius:7px;border:0;background:transparent;color:var(--tx2);cursor:pointer;font-size:12.5px;font-weight:600}
+.seg.on{background:var(--card2);color:var(--tx)}
+
+.split{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1.5px;background:var(--line)}
+.tlItem{position:relative;padding-bottom:14px}
+.tlDot{position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--line2);border:2px solid var(--bg)}
+.tlItem.od .tlDot{background:var(--bad)} .tlItem.soon .tlDot{background:var(--warn)}
+.tlMo{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--tx3);font-weight:700;margin:16px 0 8px}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:1fr 1fr}
+  .split{grid-template-columns:1fr}
+  .landFeat{grid-template-columns:1fr}
+  .landH1{font-size:32px}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-230px;z-index:60;transition:.2s;box-shadow:var(--sh)}
+  .sidebar.open{left:0}
+  #menuBtn{display:inline-flex!important}
+}
+#menuBtn{display:none}
+
+/* ---------- date fields ---------- */
+input[type="date"].inp{cursor:pointer;position:relative;padding-right:34px}
+input[type="date"].inp::-webkit-calendar-picker-indicator{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  filter:invert(.65) sepia(.4) saturate(4) hue-rotate(190deg);cursor:pointer;opacity:.85;
+}
+input[type="date"].inp:hover::-webkit-calendar-picker-indicator{opacity:1}
+.dateQuick{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.dateQuick button{
+  padding:3px 9px;border-radius:6px;border:1px solid var(--line2);background:var(--card2);
+  color:var(--tx2);font-size:11.5px;cursor:pointer;font-weight:600;
+}
+.dateQuick button:hover{border-color:var(--acc);color:var(--acc)}
+.dateQuick button.on{border-color:var(--acc);color:var(--acc);background:rgba(96,165,250,.12)}
+
+/* ---------- google fallback ---------- */
+.findLocal{
+  display:inline-flex;align-items:center;gap:6px;margin-top:7px;padding:5px 11px;
+  border-radius:7px;border:1px dashed var(--line2);background:transparent;
+  color:var(--tx2);font-size:11.5px;cursor:pointer;font-weight:600;transition:.13s;
+}
+.findLocal:hover{border-color:var(--acc);color:var(--acc);background:var(--accDim);border-style:solid}
+
+/* ---------- missing-info nag ---------- */
+.nag{
+  background:var(--accDim);border:1px solid rgba(79,156,249,.3);border-radius:var(--r);
+  padding:11px 14px;font-size:12.5px;color:var(--acc);margin-bottom:14px;display:flex;gap:10px;align-items:center;
+}
+.nag .btn{margin-left:auto}
+.navBadge.info{background:var(--acc)}
+
+/* ---------- walkthrough ---------- */
+.wtHead{display:flex;gap:14px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.prog{flex:1;min-width:160px;height:7px;border-radius:6px;background:var(--line);overflow:hidden}
+.progFill{height:100%;background:linear-gradient(90deg,var(--acc),#8b5cf6);transition:.3s;border-radius:6px}
+.wtArea{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--tx3);font-weight:700;margin:18px 0 8px}
+.wtItem{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;background:var(--card);transition:.13s}
+.wtItem.ok{border-left:3px solid var(--ok)}
+.wtItem.attention{border-left:3px solid var(--bad)}
+.wtItem.na{border-left:3px solid var(--line2);opacity:.62}
+.wtTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wtLabel{font-weight:600;font-size:13.5px;flex:1;min-width:150px}
+.wtBtns{display:flex;gap:4px}
+.wtBtn{
+  padding:4px 11px;border-radius:7px;border:1px solid var(--line2);background:var(--card2);
+  color:var(--tx2);font-size:12px;cursor:pointer;font-weight:600;transition:.13s;
+}
+.wtBtn:hover{border-color:var(--tx3);color:var(--tx)}
+.wtBtn.on.ok{background:var(--okDim);border-color:var(--ok);color:var(--ok)}
+.wtBtn.on.attention{background:var(--badDim);border-color:var(--bad);color:var(--bad)}
+.wtBtn.on.na{background:var(--card2);border-color:var(--line2);color:var(--tx2)}
+.wtBody{margin-top:10px;display:flex;gap:10px;align-items:flex-start}
+.wtNote{flex:1}
+.wtPhotoBox{flex-shrink:0;width:96px}
+.wtThumb{
+  width:96px;height:72px;border-radius:8px;object-fit:cover;display:block;
+  border:1px solid var(--line2);cursor:pointer;background:var(--bg);
+}
+.wtUpload{
+  width:96px;height:72px;border-radius:8px;border:1.5px dashed var(--line2);
+  display:grid;place-items:center;cursor:pointer;font-size:11px;color:var(--tx3);
+  text-align:center;line-height:1.3;transition:.13s;background:var(--bg);
+}
+.wtUpload:hover{border-color:var(--acc);color:var(--acc)}
+.wtUpload input{display:none}
+.wtPhotoActs{display:flex;gap:4px;margin-top:4px}
+.wtPhotoActs button{
+  flex:1;padding:2px 0;border-radius:5px;border:1px solid var(--line2);
+  background:var(--card2);color:var(--tx3);font-size:10.5px;cursor:pointer;
+}
+.wtPhotoActs button:hover{color:var(--bad);border-color:var(--bad)}
+.lightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:grid;place-items:center;
+  padding:32px;cursor:zoom-out;
+}
+.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+.wtSticky{
+  position:sticky;bottom:0;background:rgba(21,26,35,.96);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line2);padding:12px 0;margin-top:18px;display:flex;gap:10px;align-items:center;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toasts"></div>
+<div id="modalRoot"></div>
+<script>
+/* ============================================================
+   PropertyPulse (prototype build)
+   Single-file. Data persists to localStorage.
+   Phase 2 swaps the `DB` layer for Supabase (same shape).
+   ============================================================ */
+
+/* ---------- 1. ONBOARDING QUESTION SET ---------------------
+   Each answer key switches on a set of maintenance rules.
+   This is what keeps the app flexible per-property: a condo
+   with no yard simply never sees gutter or irrigation tasks.
+----------------------------------------------------------- */
+const GROUPS = [
+ {id:'heat', q:'How is the property heated?', sub:'Pick every system present.', multi:true, opts:[
+   {k:'furnace',   t:'Gas or oil furnace',  d:'Forced-air with filters'},
+   {k:'heatpump',  t:'Heat pump',           d:'Heats and cools'},
+   {k:'boiler',    t:'Boiler / radiators',  d:'Hydronic or steam'},
+   {k:'baseboard', t:'Electric baseboard',  d:'Resistance heaters'},
+   {k:'noheat',    t:'None',                d:'No heating system'},
+ ]},
+ {id:'cool', q:'How is it cooled?', sub:'Pick every system present.', multi:true, opts:[
+   {k:'centralac', t:'Central A/C',      d:'Ducted condenser unit'},
+   {k:'minisplit', t:'Mini-split',       d:'Ductless wall units'},
+   {k:'window',    t:'Window units',     d:'Removable seasonal units'},
+   {k:'nocool',    t:'None',             d:'No cooling system'},
+ ]},
+ {id:'water', q:'Water and waste setup?', sub:'These drive some of the most expensive deferred repairs.', multi:true, opts:[
+   {k:'tankwh',   t:'Tank water heater',  d:'Needs annual flush'},
+   {k:'tankless', t:'Tankless heater',    d:'Needs descaling'},
+   {k:'well',     t:'Private well',       d:'Water testing required'},
+   {k:'septic',   t:'Septic system',      d:'Pump every 3 years'},
+   {k:'softener', t:'Water softener',     d:'Salt refills'},
+   {k:'sump',     t:'Sump pump',          d:'Basement flood protection'},
+ ]},
+ {id:'ext', q:'What exterior features does it have?', sub:'', multi:true, opts:[
+   {k:'gutters',  t:'Gutters',            d:'Clean twice a year'},
+   {k:'roof',     t:'Pitched roof',       d:'Annual inspection'},
+   {k:'chimney',  t:'Chimney / fireplace',d:'Sweep and inspect'},
+   {k:'deck',     t:'Deck or wood porch', d:'Seal every 2 years'},
+   {k:'siding',   t:'Painted siding',     d:'Repaint cycle'},
+   {k:'driveway', t:'Asphalt driveway',   d:'Sealcoat cycle'},
+   {k:'windows',  t:'Caulked windows',    d:'Weatherproofing'},
+   {k:'foundation',t:'Basement or crawlspace',d:'Moisture checks'},
+ ]},
+ {id:'yard', q:'Yard and grounds?', sub:'', multi:true, opts:[
+   {k:'lawn',    t:'Lawn',             d:'Recurring mowing'},
+   {k:'irrig',   t:'Irrigation system',d:'Winterize and start up'},
+   {k:'trees',   t:'Mature trees',     d:'Trimming and limb checks'},
+   {k:'pool',    t:'Pool',             d:'Weekly service'},
+   {k:'hottub',  t:'Hot tub',          d:'Water chemistry'},
+ ]},
+ {id:'appl', q:'Which appliances are on site?', sub:'You will add brand, model, and install year for each on the next step.', multi:true, opts:[
+   {k:'fridge',   t:'Refrigerator',      d:'Coil and filter service'},
+   {k:'dishwash', t:'Dishwasher',        d:'Filter cleaning'},
+   {k:'washer',   t:'Clothes washer',    d:'Hose inspection'},
+   {k:'dryer',    t:'Clothes dryer',     d:'Vent cleaning, fire risk'},
+   {k:'range',    t:'Range or oven',     d:'Burner and seal checks'},
+   {k:'hood',     t:'Range hood',        d:'Grease filter'},
+   {k:'disposal', t:'Garbage disposal',  d:'Cleaning and de-scaling'},
+   {k:'micro',    t:'Microwave',         d:'Filter and vent'},
+ ]},
+ {id:'safety', q:'Safety and systems?', sub:'', multi:true, opts:[
+   {k:'detectors',t:'Smoke / CO detectors',d:'Battery and test cycle'},
+   {k:'extinguish',t:'Fire extinguishers', d:'Annual gauge check'},
+   {k:'garage',   t:'Garage door opener',  d:'Safety reverse test'},
+   {k:'panel',    t:'Electrical panel',    d:'Periodic inspection'},
+   {k:'pest',     t:'Pest control needed', d:'Quarterly treatment'},
+   {k:'termite',  t:'Termite risk area',   d:'Annual inspection'},
+ ]},
+];
+
+/* Appliances that get a brand/model/year record */
+const APPLIANCE_KEYS = {
+  fridge:'Refrigerator', dishwash:'Dishwasher', washer:'Clothes washer', dryer:'Clothes dryer',
+  range:'Range / oven', hood:'Range hood', disposal:'Garbage disposal', micro:'Microwave',
+  furnace:'Furnace', heatpump:'Heat pump', boiler:'Boiler', centralac:'Central A/C',
+  minisplit:'Mini-split', tankwh:'Water heater (tank)', tankless:'Water heater (tankless)',
+  softener:'Water softener', sump:'Sump pump', garage:'Garage door opener',
+};
+
+/* ---------- 2. VENDOR TRADES ------------------------------ */
+const TRADES = {
+  hvac:'HVAC', plumbing:'Plumbing', electrical:'Electrical', roofing:'Roofing / gutters',
+  landscaping:'Landscaping', pest:'Pest control', appliance:'Appliance repair',
+  chimney:'Chimney', septic:'Septic / well', pool:'Pool & spa', handyman:'General handyman',
+  cleaning:'Cleaning', painting:'Painting', paving:'Paving',
+};
+
+/* ---------- 3. MAINTENANCE RULE CATALOG -------------------
+   req: property must have ANY of these systems for the rule to apply
+   every: months between occurrences
+   trade: which vendor type to suggest ('' = owner can do it)
+   season: optional month (1-12) the task should land in
+----------------------------------------------------------- */
+const RULES = [
+ // HVAC
+ {id:'filter',    n:'Replace HVAC air filter',        req:['furnace','heatpump','centralac'], every:3,  trade:'',        why:'Clogged filters cut efficiency and strain the blower motor.'},
+ {id:'hvacfall',  n:'Heating system tune-up',         req:['furnace','boiler','heatpump'],    every:12, trade:'hvac',    season:10, why:'Pre-winter service catches cracked heat exchangers and ignition faults.'},
+ {id:'hvacspring',n:'A/C tune-up and coil clean',     req:['centralac','heatpump','minisplit'],every:12,trade:'hvac',    season:4,  why:'Refrigerant and coil service before peak load.'},
+ {id:'minisplitf',n:'Clean mini-split filters',       req:['minisplit'],                      every:2,  trade:'',        why:'Ductless units clog fast and lose capacity.'},
+ {id:'ductclean', n:'Duct cleaning',                  req:['furnace','centralac'],            every:48, trade:'hvac',    why:'Dust and allergen buildup in supply runs.'},
+ {id:'windowac',  n:'Install / remove window A/C units',req:['window'],                       every:6,  trade:'',        why:'Seasonal swap plus filter rinse.'},
+ // Plumbing / water
+ {id:'whflush',   n:'Flush water heater tank',        req:['tankwh'],                         every:12, trade:'plumbing',why:'Sediment buildup shortens tank life by years.'},
+ {id:'whdescale', n:'Descale tankless water heater',  req:['tankless'],                       every:12, trade:'plumbing',why:'Scale in the heat exchanger causes error codes and failure.'},
+ {id:'anode',     n:'Inspect water heater anode rod', req:['tankwh'],                         every:36, trade:'plumbing',why:'A spent anode rod means the tank starts corroding.'},
+ {id:'leakcheck', n:'Whole-property leak inspection', req:['*'],                              every:6,  trade:'',        why:'Under-sink and supply-line checks catch slow leaks early.'},
+ {id:'softsalt',  n:'Refill water softener salt',     req:['softener'],                       every:2,  trade:'',        why:'Empty brine tank means hard water damage downstream.'},
+ {id:'sumptest',  n:'Test sump pump and backup',      req:['sump'],                           every:6,  trade:'plumbing',season:3, why:'A failed sump during spring thaw floods the basement.'},
+ {id:'welltest',  n:'Well water quality test',        req:['well'],                           every:12, trade:'septic',  why:'Bacteria and nitrate testing, often legally required for rentals.'},
+ {id:'septicpump',n:'Pump septic tank',               req:['septic'],                         every:36, trade:'septic',  why:'Overfilled tanks back up into the house and ruin drain fields.'},
+ {id:'septicinsp',n:'Septic inspection',              req:['septic'],                         every:12, trade:'septic',  why:'Baffle and drain-field check between pumpings.'},
+ // Exterior
+ {id:'gutterspr', n:'Clean gutters (spring)',         req:['gutters'],                        every:12, trade:'roofing', season:4,  why:'Blocked gutters push water into fascia and foundation.'},
+ {id:'gutterfall',n:'Clean gutters (fall)',           req:['gutters'],                        every:12, trade:'roofing', season:11, why:'Post leaf-drop clearing before freeze.'},
+ {id:'roofinsp',  n:'Roof inspection',                req:['roof'],                           every:12, trade:'roofing', season:5,  why:'Lifted shingles and flashing gaps found before they leak.'},
+ {id:'chimney',   n:'Chimney sweep and inspection',   req:['chimney'],                        every:12, trade:'chimney', season:9,  why:'Creosote buildup is the leading cause of chimney fires.'},
+ {id:'deckseal',  n:'Reseal deck',                    req:['deck'],                           every:24, trade:'painting',season:6,  why:'Unsealed wood grays, splits, and rots.'},
+ {id:'paint',     n:'Repaint exterior siding',        req:['siding'],                         every:84, trade:'painting',why:'Paint failure exposes substrate to rot.'},
+ {id:'caulk',     n:'Inspect and replace window caulk',req:['windows'],                       every:24, trade:'handyman',why:'Failed caulk drives up energy costs and lets water in.'},
+ {id:'driveseal', n:'Sealcoat driveway',              req:['driveway'],                       every:36, trade:'paving',  season:7,  why:'Sealing prevents freeze-thaw cracking.'},
+ {id:'foundation',n:'Foundation and drainage check',  req:['foundation'],                     every:12, trade:'',        season:4,  why:'Grading and crack monitoring around the perimeter.'},
+ // Yard
+ {id:'mow',       n:'Lawn service',                   req:['lawn'],                           every:1,  trade:'landscaping',why:'Recurring cut during growing season.'},
+ {id:'irrigwin',  n:'Winterize irrigation system',    req:['irrig'],                          every:12, trade:'landscaping',season:10,why:'Un-blown lines freeze and split.'},
+ {id:'irrigstart',n:'Irrigation startup and head check',req:['irrig'],                        every:12, trade:'landscaping',season:4, why:'Broken heads waste water all season unnoticed.'},
+ {id:'trees',     n:'Tree trimming and limb inspection',req:['trees'],                        every:24, trade:'landscaping',why:'Overhanging limbs damage roofs in storms.'},
+ {id:'poolsvc',   n:'Pool service',                   req:['pool'],                           every:1,  trade:'pool',    why:'Chemistry balance and skimming.'},
+ {id:'poolopen',  n:'Pool opening / closing',         req:['pool'],                           every:6,  trade:'pool',    why:'Seasonal open and winterize.'},
+ {id:'tubdrain',  n:'Drain and refill hot tub',       req:['hottub'],                         every:4,  trade:'pool',    why:'Water chemistry degrades past recovery.'},
+ // Appliances
+ {id:'dryervent', n:'Clean dryer vent duct',          req:['dryer'],                          every:12, trade:'cleaning',why:'Lint buildup in the duct is a top cause of house fires.'},
+ {id:'fridgecoil',n:'Vacuum refrigerator coils',      req:['fridge'],                         every:6,  trade:'',        why:'Dusty coils make the compressor run hot and fail early.'},
+ {id:'fridgefilt',n:'Replace fridge water filter',    req:['fridge'],                         every:6,  trade:'',        why:'Manufacturer interval for ice and water lines.'},
+ {id:'dwfilter',  n:'Clean dishwasher filter',        req:['dishwash'],                       every:3,  trade:'',        why:'Clogged filters leave residue and cause drain faults.'},
+ {id:'washhose',  n:'Inspect washer supply hoses',    req:['washer'],                         every:12, trade:'',        why:'Burst washer hoses are a top-five insurance claim.'},
+ {id:'hoodfilt',  n:'Degrease range hood filter',     req:['hood'],                           every:3,  trade:'',        why:'Grease-loaded filters are a kitchen fire hazard.'},
+ {id:'disposal',  n:'Clean and de-scale disposal',    req:['disposal'],                       every:3,  trade:'',        why:'Prevents odor and jamming.'},
+ {id:'rangeclean',n:'Deep clean oven and check seals',req:['range'],                          every:6,  trade:'',        why:'Door seal failure wastes heat and uneven-cooks.'},
+ {id:'microfilt', n:'Clean microwave grease filter',  req:['micro'],                          every:6,  trade:'',        why:'Over-range units vent through a washable filter.'},
+ // Safety
+ {id:'detector',  n:'Test detectors and swap batteries',req:['detectors'],                    every:6,  trade:'',        why:'Legally required in most rental jurisdictions.'},
+ {id:'extinguish',n:'Check fire extinguisher gauges', req:['extinguish'],                     every:12, trade:'',        why:'Discharged extinguishers are worthless in an emergency.'},
+ {id:'garagetest',n:'Garage door safety reverse test',req:['garage'],                         every:12, trade:'handyman',why:'Auto-reverse failure is a serious injury risk.'},
+ {id:'panelinsp', n:'Electrical panel inspection',    req:['panel'],                          every:36, trade:'electrical',why:'Loose breakers and corrosion are fire hazards.'},
+ {id:'pestquart', n:'Pest control treatment',         req:['pest'],                           every:3,  trade:'pest',    why:'Quarterly barrier treatment.'},
+ {id:'termite',   n:'Termite inspection',             req:['termite'],                        every:12, trade:'pest',    why:'Termite damage is almost never covered by insurance.'},
+ // Universal
+ {id:'walkthru',  n:'Full property walkthrough',      req:['*'],                              every:6,  trade:'',        why:'Documented condition check, useful for deposits and insurance.'},
+];
+
+/* ---------- 4. STORAGE LAYER ------------------------------
+   Every read/write goes through DB. Swapping to Supabase in
+   phase 2 means rewriting only these functions.
+----------------------------------------------------------- */
+const KEY='propertypulse.v1';
+const DB={
+  load(){ try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null} },
+  /* A failed save is the worst thing that can happen here, because the user
+     keeps working against state that is only in memory. Say so loudly and name
+     the likely cause instead of a generic error. */
+  save(s){
+    try{ localStorage.setItem(KEY,JSON.stringify(s)); return true }
+    catch(e){
+      const quota=e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014);
+      toast(quota?'Out of browser storage. Delete an old walkthrough or export your data.'
+                 :'Could not save to this browser','bad',7000);
+      return false;
+    }
+  },
+  clear(){ localStorage.removeItem(KEY) },
+};
+
+function blankState(){
+  return {
+    onboarded:false, demo:false, role:'owner',
+    owner:{name:'',email:''},
+    properties:[], activeProp:null, activeWalk:null,
+    vendors:[], appliances:[], completions:[], requests:[], custom:[], walkthroughs:[],
+    prefs:{emailDigest:true, digestDay:'mon', whatsapp:false, phone:'', lookahead:60},
+  };
+}
+/* Anyone who used an earlier build has saved state without the newer
+   collections. Fill in anything missing rather than wiping their data. */
+function migrate(s){
+  if(!s||typeof s!=='object') return blankState();
+  const base=blankState();
+  Object.keys(base).forEach(k=>{
+    if(s[k]===undefined) s[k]=Array.isArray(base[k])?[]:base[k];
+  });
+  ['properties','vendors','appliances','completions','requests','custom','walkthroughs']
+    .forEach(k=>{ if(!Array.isArray(s[k])) s[k]=[] });
+  s.prefs={...base.prefs,...(s.prefs||{})};
+  s.owner={...base.owner,...(s.owner||{})};
+  s.walkthroughs.forEach(w=>{ if(!Array.isArray(w.items)) w.items=[] });
+  return s;
+}
+let S = migrate(DB.load());
+let view = S.onboarded ? 'dash' : 'landing';
+let wizStep = 0, wizDraft = null, guestCtx=null;
+
+function commit(){ DB.save(S); render(); }
+
+/* ---------- 5. DATE + SCHEDULE ENGINE --------------------- */
+const MS_DAY=86400000;
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+/* Parse a stored date as LOCAL midnight. new Date('2026-08-04') is parsed as
+   UTC by spec, which renders as Aug 3 for anyone west of Greenwich, so every
+   date in the app would silently display a day early. Always go through pd(). */
+function pd(v){
+  if(v instanceof Date) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='string'){
+    const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v);
+    if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  }
+  const d=new Date(v); return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function addMonths(d,m){const n=pd(d);const day=n.getDate();n.setMonth(n.getMonth()+m);if(n.getDate()<day)n.setDate(0);return n}
+function fmt(d){return pd(d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}
+function fmtShort(d){return pd(d).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
+function daysBetween(a,b){return Math.round((pd(b)-pd(a))/MS_DAY)}
+function iso(d){const n=pd(d);return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+function monthKey(d){const n=pd(d);return n.toLocaleDateString(undefined,{month:'long',year:'numeric'})}
+
+/* Nudge a date toward its ideal season month without going backwards */
+function seasonAdjust(date,season){
+  if(!season) return date;
+  const d=pd(date);
+  const target=new Date(d.getFullYear(),season-1,15);
+  if(target<d) target.setFullYear(target.getFullYear()+1);
+  // only shift if within ~5 months, otherwise keep the interval honest
+  return (daysBetween(d,target)<=150)?target:d;
+}
+
+/* Core: build the live schedule for the active property */
+function buildSchedule(propId){
+  const prop=S.properties.find(p=>p.id===propId);
+  if(!prop) return [];
+  const sys=new Set(prop.systems||[]);
+  const t=today();
+  const out=[];
+
+  const applicable=RULES.filter(r=>r.req.includes('*')||r.req.some(k=>sys.has(k)));
+  const all=[...applicable.map(r=>({...r,src:'catalog'})),
+             ...S.custom.filter(c=>c.propId===propId).map(c=>({...c,src:'custom'}))];
+
+  all.forEach(r=>{
+    if((prop.skipped||[]).includes(r.id)) return;
+    const done=S.completions.filter(c=>c.propId===propId&&c.ruleId===r.id)
+                            .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const last=done[0]?pd(done[0].date):null;
+    let due;
+    if(last){ due=addMonths(last,r.every); }
+    else {
+      // Never recorded. We genuinely do not know when this was last done, so
+      // claiming it is "426 days overdue" would be fabricating history. Instead
+      // anchor to the property's baseline, roll forward to the next real
+      // occurrence, then stagger deterministically so a fresh account does not
+      // dump twenty tasks onto the same day. Overdue status is reserved for
+      // work we have actual evidence has lapsed.
+      const base=pd(prop.baseline||prop.created);
+      due=addMonths(base,r.every);
+      let guard=0;
+      while(due<t&&guard++<600) due=addMonths(due,r.every);
+      due=seasonAdjust(due,r.season);
+      if(due<t) due=new Date(t.getTime()+7*MS_DAY);
+      const stagger=[...r.id].reduce((a,c)=>a+c.charCodeAt(0),0)%14;
+      due=new Date(due.getTime()+stagger*MS_DAY);
+    }
+    const days=daysBetween(t,due);
+    out.push({
+      ruleId:r.id, name:r.n||r.name, every:r.every, trade:r.trade, why:r.why,
+      src:r.src, due, days,
+      status: days<0?'overdue' : days<=30?'soon' : 'future',
+      lastDone:last, timesDone:done.length,
+    });
+  });
+  return out.sort((a,b)=>a.due-b.due);
+}
+
+/* Suggest vendors for a task: exact trade match first, then handyman */
+function suggestVendors(trade){
+  if(!trade) return [];
+  const exact=S.vendors.filter(v=>(v.trades||[]).includes(trade));
+  if(exact.length) return exact.slice(0,3);
+  return S.vendors.filter(v=>(v.trades||[]).includes('handyman')).slice(0,2);
+}
+/* True only when we have no exact-trade match, i.e. a real coverage gap */
+function hasExactVendor(trade){
+  return !!trade && S.vendors.some(v=>(v.trades||[]).includes(trade));
+}
+
+/* ---------- 6a. LOCAL VENDOR SEARCH ------------------------
+   No free Google Search API exists for a static site, so instead
+   of faking results we hand the user a fully-formed query. The
+   search terms carry the trade, the property's location, and the
+   specific job, so the first page of results is already useful.
+----------------------------------------------------------- */
+const TRADE_QUERY={
+  hvac:'HVAC repair and service company', plumbing:'licensed plumber',
+  electrical:'licensed electrician', roofing:'roofing and gutter contractor',
+  landscaping:'lawn care and landscaping service', pest:'pest control company',
+  appliance:'appliance repair service', chimney:'certified chimney sweep',
+  septic:'septic tank pumping and well service', pool:'pool and spa service',
+  handyman:'handyman service', cleaning:'dryer vent and duct cleaning service',
+  painting:'house painting contractor', paving:'asphalt driveway sealcoating',
+};
+/* Pull the most search-useful part of an address: zip, else city+state */
+function propLocation(p){
+  if(!p) return '';
+  const a=(p.address||'').trim();
+  const zip=/\b(\d{5})(?:-\d{4})?\b/.exec(a);
+  if(zip) return zip[1];
+  const parts=a.split(',').map(s=>s.trim()).filter(Boolean);
+  if(parts.length>=2) return parts.slice(-2).join(' ');
+  return parts[0]||'';
+}
+function googleUrl(trade,prop,jobName){
+  const what=TRADE_QUERY[trade]||TRADES[trade]||'home maintenance contractor';
+  const where=propLocation(prop);
+  const q=[what,where?'near '+where:'',jobName?'for '+jobName.toLowerCase():'','reviews']
+    .filter(Boolean).join(' ');
+  return 'https://www.google.com/search?q='+encodeURIComponent(q);
+}
+/* Button shown wherever a task needs a trade the directory does not cover */
+/* TRADES holds category labels ("Electrical", "Paving") which read wrong in a
+   sentence. These are the person you would actually call. */
+const TRADE_NOUN={
+  hvac:'HVAC company', plumbing:'plumber', electrical:'electrician',
+  roofing:'roofer', landscaping:'landscaper', pest:'pest control company',
+  appliance:'appliance repair tech', chimney:'chimney sweep',
+  septic:'septic company', pool:'pool service', handyman:'handyman',
+  cleaning:'cleaning service', painting:'painter', paving:'paving contractor',
+};
+function findLocalBtn(trade,prop,jobName){
+  if(!trade) return '';
+  const noun=TRADE_NOUN[trade]||(TRADES[trade]||trade).toLowerCase()+' contractor';
+  const where=propLocation(prop);
+  return `<a class="findLocal" target="_blank" rel="noopener noreferrer"
+     href="${googleUrl(trade,prop,jobName)}"
+     title="Opens a Google search for a ${esc(noun)} near ${esc(where||'your property')}">
+     &#128269; Find a local ${esc(noun)}</a>`;
+}
+
+/* ---------- 6b. APPLIANCE COMPLETENESS ---------------------
+   Details can be skipped during setup, so the app has to keep
+   asking until they are filled in.
+----------------------------------------------------------- */
+function applIncomplete(a){ return !a.brand||!a.model||!a.year }
+function incompleteAppliances(propId){
+  return S.appliances.filter(a=>a.propId===propId&&applIncomplete(a));
+}
+function missingFields(a){
+  return [!a.brand&&'brand',!a.model&&'model number',!a.year&&'install year'].filter(Boolean);
+}
+
+/* ---------- 6c. WALKTHROUGH CHECKLIST ----------------------
+   The checklist is generated from the same systems answers that
+   drive the schedule, so an inspector never gets handed a "check
+   the pool equipment" line on a property with no pool.
+   req:null means the item always applies.
+----------------------------------------------------------- */
+const WT_TEMPLATE=[
+ ['Exterior',[
+   ['Roof surface and flashing','roof'],['Gutters and downspouts','gutters'],
+   ['Siding, trim and paint','siding'],['Foundation, grading and drainage','foundation'],
+   ['Deck, porch or patio','deck'],['Driveway and walkways','driveway'],
+   ['Windows, caulk and weather seals','windows'],['Chimney exterior and cap','chimney'],
+   ['Exterior doors and locks',null],['Exterior lighting and outlets',null],
+ ]],
+ ['Grounds',[
+   ['Lawn condition','lawn'],['Irrigation heads and coverage','irrig'],
+   ['Trees, limbs and clearance','trees'],['Pool, decking and equipment','pool'],
+   ['Hot tub cover and chemistry','hottub'],['Fencing and gates',null],
+ ]],
+ ['Mechanical',[
+   ['Furnace or boiler operation','furnace'],['Boiler and radiators','boiler'],
+   ['Heat pump operation','heatpump'],['A/C condenser and lines','centralac'],
+   ['Mini-split units and filters','minisplit'],['Water heater and relief valve','tankwh'],
+   ['Tankless unit and error codes','tankless'],['Water softener and salt level','softener'],
+   ['Sump pump and discharge','sump'],['Electrical panel and breakers','panel'],
+   ['Visible plumbing and shutoffs',null],['Signs of active leaks',null],
+ ]],
+ ['Kitchen',[
+   ['Refrigerator and seals','fridge'],['Dishwasher and drain','dishwash'],
+   ['Range or oven burners','range'],['Range hood and filter','hood'],
+   ['Microwave operation','micro'],['Garbage disposal','disposal'],
+   ['Sink, faucet and under-sink area',null],['Cabinets and countertops',null],
+ ]],
+ ['Laundry',[
+   ['Washer and supply hoses','washer'],['Dryer, vent and lint path','dryer'],
+   ['Laundry area floor and drain',null],
+ ]],
+ ['Bathrooms',[
+   ['Toilets: seal, flush and leaks',null],['Tub, shower and grout',null],
+   ['Sinks, faucets and drains',null],['Exhaust fans and venting',null],
+ ]],
+ ['Interior',[
+   ['Walls and ceilings',null],['Flooring and transitions',null],
+   ['Interior doors and hardware',null],['Window operation and screens',null],
+   ['Stairs, railings and landings',null],['Signs of pests or droppings','pest'],
+ ]],
+ ['Safety',[
+   ['Smoke and CO detectors','detectors'],['Fire extinguishers and gauges','extinguish'],
+   ['Garage door auto-reverse','garage'],['Egress routes and window locks',null],
+ ]],
+ ['Attic, basement or crawlspace',[
+   ['Insulation coverage',null],['Moisture, staining or mold','foundation'],
+   ['Structural members and joists',null],['Ventilation',null],
+ ]],
+];
+
+function buildChecklist(prop){
+  const sys=new Set(prop.systems||[]);
+  const out=[];
+  WT_TEMPLATE.forEach(([area,items])=>{
+    items.forEach(([label,req])=>{
+      if(req&&!sys.has(req)) return;
+      out.push({id:uid(),area,label,status:'',note:'',photo:''});
+    });
+  });
+  return out;
+}
+function wtProgress(w){
+  const done=w.items.filter(i=>i.status).length;
+  return {done,total:w.items.length,pct:w.items.length?Math.round(done/w.items.length*100):0};
+}
+function wtFlags(w){ return w.items.filter(i=>i.status==='attention') }
+function activeWalkthroughs(propId){
+  return S.walkthroughs.filter(w=>w.propId===propId).sort((a,b)=>pd(b.started)-pd(a.started));
+}
+
+/* Shrink photos before they ever reach storage. A phone photo is
+   3-5 MB and browser storage caps around 5 MB total, so storing
+   originals would break the app on the second picture. */
+function compressImage(file,max=800,quality=0.6){
+  return new Promise((resolve,reject)=>{
+    if(!/^image\//.test(file.type)) return reject(new Error('Not an image'));
+    const fr=new FileReader();
+    fr.onerror=()=>reject(new Error('Could not read file'));
+    fr.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('Could not decode image'));
+      img.onload=()=>{
+        let w=img.naturalWidth,h=img.naturalHeight;
+        if(w>=h&&w>max){ h=Math.round(h*max/w); w=max }
+        else if(h>w&&h>max){ w=Math.round(w*max/h); h=max }
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const cx=c.getContext('2d');
+        cx.fillStyle='#fff'; cx.fillRect(0,0,w,h);
+        cx.drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',quality));
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function storageUsed(){
+  try{ return Math.round((localStorage.getItem(KEY)||'').length/1024) }catch(e){ return 0 }
+}
+
+/* ---------- 6d. DATE FIELD ---------------------------------
+   Renders a native date input (which gives a real dropdown
+   calendar on every modern browser) plus one-tap shortcuts for
+   the values people actually pick. bindDates() makes a click
+   anywhere in the field open the calendar, not just the icon.
+----------------------------------------------------------- */
+/* `attr` arrives as a raw attribute fragment like `id="cdue"`. It must never be
+   interpolated into another attribute value: the inner quotes terminate it
+   early and the browser silently parses garbage. Shortcut buttons therefore
+   carry no selector at all and resolve the input by walking up to the shared
+   wrapper. */
+function dateField(labelText,attr,value,hint,quick){
+  const shortcuts=(quick||[]).map(([l,days])=>
+    `<button type="button" data-quick="1" data-days="${days}">${esc(l)}</button>`).join('');
+  return `<label class="f dateWrap"><span>${labelText}</span>
+    <input class="inp dateInp" type="date" ${attr} value="${esc(value||'')}">
+    ${shortcuts?`<div class="dateQuick">${shortcuts}</div>`:''}
+    ${hint?`<div class="hint">${hint}</div>`:''}</label>`;
+}
+function yearSelect(attrs,value){
+  const now=new Date().getFullYear();
+  const years=[];
+  for(let y=now;y>=1960;y--) years.push(y);
+  return `<select class="inp" ${attrs}>
+    <option value="">Not sure yet</option>
+    ${years.map(y=>`<option value="${y}"${String(value)===String(y)?' selected':''}>${y}</option>`).join('')}
+  </select>`;
+}
+/* A click anywhere in a date field should open the calendar. */
+function bindDates(scope){
+  scope.querySelectorAll('input[type="date"]').forEach(el=>{
+    if(el.dataset.dbound) return;
+    el.dataset.dbound='1';
+    // showPicker throws if the input is not user-activated, which is expected
+    // and harmless. The native indicator still works either way.
+    const open=()=>{ try{ el.showPicker&&el.showPicker() }catch(e){} };
+    el.addEventListener('click',open);
+    el.addEventListener('focus',open);
+  });
+  scope.querySelectorAll('[data-quick]').forEach(b=>{
+    b.onclick=e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap=b.closest('.dateWrap');
+      const target=wrap&&wrap.querySelector('input[type="date"]');
+      if(!target) return;
+      target.value=iso(new Date(today().getTime()+(+b.dataset.days)*MS_DAY));
+      target.dispatchEvent(new Event('input',{bubbles:true}));
+      target.dispatchEvent(new Event('change',{bubbles:true}));
+      // reflect the choice so the user can see which shortcut is active
+      wrap.querySelectorAll('[data-quick]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+    };
+  });
+}
+
+/* ---------- 6. SMALL HELPERS ------------------------------ */
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg,kind,ms){
+  const el=document.createElement('div');
+  el.className='toast'+(kind?' '+kind:'');
+  el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},ms||3200);
+}
+function activeProp(){ return S.properties.find(p=>p.id===S.activeProp)||S.properties[0]||null }
+function dueLabel(days){
+  if(days<0) return Math.abs(days)+' day'+(Math.abs(days)===1?'':'s')+' overdue';
+  if(days===0) return 'Due today';
+  if(days===1) return 'Due tomorrow';
+  if(days<=60) return 'Due in '+days+' days';
+  return 'Due '+fmtShort(arguments[1]||new Date());
+}
+function everyLabel(m){
+  if(m===1) return 'Monthly'; if(m===2) return 'Every 2 months';
+  if(m===3) return 'Quarterly'; if(m===4) return 'Every 4 months';
+  if(m===6) return 'Twice a year'; if(m===12) return 'Annually';
+  if(m<12) return 'Every '+m+' months';
+  if(m%12===0) return 'Every '+(m/12)+' years';
+  return 'Every '+m+' months';
+}
+
+/* ============================================================
+   7. RENDER
+   ============================================================ */
+const R=document.getElementById('root');
+
+function render(){
+  if(view==='landing'){ R.innerHTML=Landing(); return bind(); }
+  if(view==='wizard'){ R.innerHTML=Wizard(); return bind(); }
+  if(view==='guest'){ R.innerHTML=GuestPortal(); return bind(); }
+  if(view==='vendorwalk'){ R.innerHTML=VendorWalk(); return bind(); }
+  R.innerHTML=Shell();
+  bind();
+}
+
+/* ---------- landing / portfolio front door ---------------- */
+function Landing(){
+  return `<div class="land">
+  <div class="landNav">
+    <div class="brandMark">P</div>
+    <div><div class="brandName">PropertyPulse</div></div>
+    <div style="flex:1"></div>
+    <button class="btn sm" data-a="guestPortal">Guest access</button>
+  </div>
+  <div class="landHero">
+    <h1 class="landH1">Stop tracking property maintenance in a <em>spreadsheet you never update</em>.</h1>
+    <p class="landP">PropertyPulse asks what your property actually has, builds the maintenance schedule for you, tells you what is past due, and suggests which vendor to call. Guests report issues straight into the same queue.</p>
+    <div class="landCta">
+      <button class="btn pri lg" data-a="demo">View live demo</button>
+      <button class="btn lg" data-a="startWizard">Set up my property</button>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-top:14px">Demo loads a fully populated sample property. No signup.</p>
+  </div>
+  <div class="landFeat">
+    <div class="feat"><div class="featIco">&#9881;</div><div class="featT">Schedule builds itself</div><div class="featP">Answer a short setup questionnaire and the app generates every recurring task the property needs, seasonally timed. A condo never sees gutter tasks.</div></div>
+    <div class="feat"><div class="featIco">&#9200;</div><div class="featT">Past due is impossible to miss</div><div class="featP">Overdue work is pinned to the top of the dashboard and pushed to a scheduled email digest, so nothing depends on you remembering to open a sheet.</div></div>
+    <div class="feat"><div class="featIco">&#128222;</div><div class="featT">The right vendor, pre-attached</div><div class="featP">Each task knows what trade it needs and surfaces the matching vendor from your directory with their phone and email one tap away.</div></div>
+  </div>
+  <div class="landFoot">Prototype build &middot; data stored locally in this browser</div>
+</div>`;
+}
+
+/* ---------- app shell ------------------------------------- */
+const NAV=[
+  {k:'dash',   i:'&#9632;', t:'Dashboard'},
+  {k:'sched',  i:'&#9635;', t:'Schedule'},
+  {k:'walk',   i:'&#9744;', t:'Walkthroughs'},
+  {k:'requests',i:'&#9993;',t:'Requests'},
+  {k:'props',  i:'&#8962;', t:'Properties'},
+  {k:'appl',   i:'&#9707;', t:'Appliances'},
+  {k:'vendors',i:'&#9782;', t:'Vendors'},
+  {k:'settings',i:'&#9881;',t:'Settings'},
+];
+
+function Shell(){
+  const p=activeProp();
+  const sch=p?buildSchedule(p.id):[];
+  const od=sch.filter(x=>x.status==='overdue').length;
+  const openReq=S.requests.filter(r=>r.status!=='closed').length;
+  const incAppl=p?incompleteAppliances(p.id).length:0;
+  const openWalk=p?activeWalkthroughs(p.id).filter(w=>w.status!=='complete').length:0;
+  const titles={dash:'Dashboard',sched:'Maintenance schedule',walk:'Property walkthroughs',
+    requests:'Maintenance requests',props:'Properties',appl:'Appliances & systems',
+    vendors:'Vendor directory',settings:'Settings',walkdetail:'Walkthrough'};
+
+  const nav=NAV.map(n=>{
+    let badge='';
+    if(n.k==='dash'&&od) badge=`<span class="navBadge">${od}</span>`;
+    if(n.k==='requests'&&openReq) badge=`<span class="navBadge">${openReq}</span>`;
+    if(n.k==='appl'&&incAppl) badge=`<span class="navBadge info">${incAppl}</span>`;
+    if(n.k==='walk'&&openWalk) badge=`<span class="navBadge info">${openWalk}</span>`;
+    const on=view===n.k||(n.k==='walk'&&view==='walkdetail');
+    return `<button class="navItem${on?' on':''}" data-nav="${n.k}"><span class="navIco">${n.i}</span>${n.t}${badge}</button>`;
+  }).join('');
+
+  const propPicker=S.properties.length>1?`<select class="inp" style="width:auto;max-width:220px" data-a="switchProp">
+    ${S.properties.map(x=>`<option value="${x.id}"${x.id===S.activeProp?' selected':''}>${esc(x.nickname||x.address)}</option>`).join('')}</select>`:'';
+
+  let body='';
+  if(view==='dash') body=Dash(p,sch);
+  else if(view==='sched') body=Schedule(p,sch);
+  else if(view==='walk') body=Walkthroughs(p);
+  else if(view==='walkdetail') body=WalkDetail(S.activeWalk,false);
+  else if(view==='requests') body=Requests();
+  else if(view==='props') body=Props();
+  else if(view==='appl') body=Appliances();
+  else if(view==='vendors') body=Vendors();
+  else if(view==='settings') body=Settings();
+
+  return `<div id="app">
+   <aside class="sidebar" id="sb">
+     <div class="brand"><div class="brandMark">P</div>
+       <div><div class="brandName">PropertyPulse</div><div class="brandSub">${S.demo?'Demo mode':'Owner'}</div></div></div>
+     <nav class="nav"><div class="navLabel">Manage</div>${nav}</nav>
+     <div class="sideFoot">
+       <button class="btn sm" style="width:100%;margin-bottom:7px" data-a="guestPortal">Open guest portal</button>
+       <button class="btn sm gho" style="width:100%" data-a="home">&larr; Back to landing</button>
+     </div>
+   </aside>
+   <div class="main">
+     <header class="topbar">
+       <button class="btn sm" id="menuBtn" data-a="toggleMenu">&#9776;</button>
+       <div class="pageTitle">${titles[view]||''}</div>
+       <div class="topSpacer"></div>
+       ${propPicker}
+     </header>
+     <div class="content">${body}</div>
+   </div>
+  </div>`;
+}
+
+/* ---------- dashboard ------------------------------------- */
+function Dash(p,sch){
+  if(!p) return NoProp();
+  const od=sch.filter(x=>x.status==='overdue');
+  const soon=sch.filter(x=>x.status==='soon');
+  const doneYTD=S.completions.filter(c=>c.propId===p.id&&pd(c.date).getFullYear()===new Date().getFullYear()).length;
+  const openReq=S.requests.filter(r=>r.propId===p.id&&r.status!=='closed');
+
+  const demoBanner=S.demo?`<div class="banner"><span>&#9432;</span><div>You are viewing demo data for a sample property. Nothing here is real.</div>
+    <button class="btn sm" data-a="exitDemo">Start fresh</button></div>`:'';
+
+  const inc=incompleteAppliances(p.id);
+  const applNag=inc.length?`<div class="nag">&#9432;
+    <div><b>${inc.length} item${inc.length===1?'':'s'} still need details.</b>
+      ${esc(inc.slice(0,3).map(a=>APPLIANCE_KEYS[a.key]||a.key).join(', '))}${inc.length>3?' and '+(inc.length-3)+' more':''}
+      ${inc.length===1?'is':'are'} missing brand, model or install year. Add them next time you are at the property.</div>
+    <button class="btn sm" data-nav="appl">Fill in now</button></div>`:'';
+
+  const stats=`<div class="stats">
+    <div class="stat ${od.length?'bad':'ok'}"><div class="statN">${od.length}</div><div class="statL">Past due</div></div>
+    <div class="stat warn"><div class="statN">${soon.length}</div><div class="statL">Due in 30 days</div></div>
+    <div class="stat acc"><div class="statN">${openReq.length}</div><div class="statL">Open requests</div></div>
+    <div class="stat ok"><div class="statN">${doneYTD}</div><div class="statL">Completed this year</div></div>
+  </div>`;
+
+  const list=(arr,emptyMsg)=>arr.length?arr.map(taskRow).join(''):`<div class="empty"><p>${emptyMsg}</p></div>`;
+
+  const reqBlock=openReq.length?`<div class="card"><div class="cardHd"><div><div class="cardTitle">Open guest requests</div>
+    <div class="cardSub">Reported issues waiting on you</div></div>
+    <div style="flex:1"></div><button class="btn sm" data-nav="requests">View all</button></div>
+    ${openReq.slice(0,3).map(reqRow).join('')}</div>`:'';
+
+  return `${demoBanner}${applNag}${stats}
+  <div class="split">
+    <div>
+      <div class="card">
+        <div class="cardHd"><div><div class="cardTitle">Needs attention now</div>
+        <div class="cardSub">Past due, oldest first</div></div>
+        <div style="flex:1"></div>
+        ${od.length?`<span class="pill bad">${od.length} overdue</span>`:'<span class="pill ok">All current</span>'}</div>
+        ${list(od,'Nothing is past due. This is what a maintained property looks like.')}
+      </div>
+      <div class="card">
+        <div class="cardHd"><div><div class="cardTitle">Coming up in 30 days</div>
+        <div class="cardSub">Schedule these before they slip</div></div></div>
+        ${list(soon,'Nothing due in the next 30 days.')}
+      </div>
+      ${reqBlock}
+    </div>
+    <div>
+      <div class="card">
+        <div class="cardHd"><div class="cardTitle">${esc(p.nickname||'Property')}</div></div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.7">
+          ${esc(p.address)}<br>
+          <span style="color:var(--tx3)">${esc(p.type||'')}${p.beds?' &middot; '+esc(p.beds)+' bed':''}${p.year?' &middot; built '+esc(p.year):''}</span>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px">
+          <button class="btn sm" data-a="addCustom">+ Add a maintenance item</button>
+          <button class="btn sm" data-a="logDone">Log completed work</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cardHd"><div class="cardTitle">Notifications</div></div>
+        <div style="font-size:12.5px;color:var(--tx2);line-height:1.6">
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span>In-app alerts</span><span class="pill ok">On</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Email digest</span><span class="pill ${S.prefs.emailDigest?'ok':'neu'}">${S.prefs.emailDigest?'Weekly':'Off'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span>WhatsApp</span><span class="pill neu">Phase 2</span></div>
+        </div>
+        <button class="btn sm" style="width:100%;margin-top:11px" data-a="preview">Preview digest email</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function taskRow(t){
+  const p=activeProp();
+  const v=suggestVendors(t.trade);
+  const exact=hasExactVendor(t.trade);
+  let vChip='';
+  if(v.length&&exact){
+    vChip=`<div class="vendorChip">&#9782; <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}
+      ${v.length>1?`<span style="color:var(--tx3)">+${v.length-1} more</span>`:''}</div>`;
+  } else if(t.trade){
+    // no exact-trade vendor: show the handyman stand-in if we have one,
+    // and always offer a pre-built local search
+    vChip=`${v.length?`<div class="vendorChip" style="color:var(--tx3)">No ${esc(TRADES[t.trade]||t.trade)} vendor saved.
+        Closest match: <b style="color:var(--tx2)">${esc(v[0].name)}</b></div>`
+      :`<div class="vendorChip" style="color:var(--tx3)">No ${esc(TRADES[t.trade]||t.trade)} vendor saved yet</div>`}
+      <div>${findLocalBtn(t.trade,p,t.name)}</div>`;
+  }
+  const pill=t.status==='overdue'?`<span class="pill bad">${Math.abs(t.days)}d overdue</span>`
+    :t.status==='soon'?`<span class="pill warn">${t.days===0?'Today':'in '+t.days+'d'}</span>`
+    :`<span class="pill neu">${fmtShort(t.due)}</span>`;
+  return `<div class="task ${t.status==='overdue'?'od':t.status==='soon'?'soon':'fut'}">
+    <div class="taskBody">
+      <div class="taskTop"><span class="taskName">${esc(t.name)}</span>${pill}
+        ${t.src==='custom'?'<span class="pill acc">Custom</span>':''}</div>
+      <div class="taskMeta">
+        <span>${everyLabel(t.every)}</span><span class="dot">&middot;</span>
+        <span>Due <b>${fmt(t.due)}</b></span>
+        ${t.lastDone?`<span class="dot">&middot;</span><span>Last done ${fmt(t.lastDone)}</span>`:'<span class="dot">&middot;</span><span>Never logged</span>'}
+      </div>
+      ${t.why?`<div style="font-size:12px;color:var(--tx3);margin-top:5px">${esc(t.why)}</div>`:''}
+      ${vChip}
+    </div>
+    <div class="taskActs">
+      <button class="btn sm pri" data-a="complete" data-id="${t.ruleId}">Mark done</button>
+      <button class="btn sm gho" data-a="snooze" data-id="${t.ruleId}" title="Push out 30 days">&#8635;</button>
+    </div>
+  </div>`;
+}
+
+function NoProp(){
+  return `<div class="card"><div class="empty">
+    <h3>No property set up yet</h3>
+    <p>Add a property and answer a few questions about what it has. PropertyPulse will build the maintenance schedule from your answers.</p>
+    <button class="btn pri" data-a="startWizard">Set up a property</button>
+    <button class="btn" data-a="demo" style="margin-left:8px">Load demo data</button>
+  </div></div>`;
+}
+
+/* ============================================================
+   8. ONBOARDING WIZARD
+   Steps: 0 property basics | 1..n system questions
+        | n+1 appliance details | n+2 vendors | n+3 review
+   ============================================================ */
+function newDraft(){
+  return {id:uid(),nickname:'',address:'',type:'Single-family',beds:'',year:'',
+          baseline:iso(addMonths(today(),-6)),systems:[],skipped:[],
+          appliances:[],vendors:[],created:iso(today())};
+}
+const TOTAL_STEPS=()=>GROUPS.length+4;
+
+function Wizard(){
+  if(!wizDraft) wizDraft=newDraft();
+  const total=TOTAL_STEPS();
+  const bars=Array.from({length:total},(_,i)=>
+    `<div class="wizStep ${i<wizStep?'done':i===wizStep?'on':''}"></div>`).join('');
+  let body='';
+
+  if(wizStep===0) body=wizBasics();
+  else if(wizStep<=GROUPS.length) body=wizGroup(GROUPS[wizStep-1]);
+  else if(wizStep===GROUPS.length+1) body=wizAppliances();
+  else if(wizStep===GROUPS.length+2) body=wizVendors();
+  else body=wizReview();
+
+  const isLast=wizStep===total-1;
+  return `<div style="padding:32px 20px"><div class="wizWrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <div class="brandMark">P</div><div class="brandName">PropertyPulse setup</div>
+      <div style="flex:1"></div>
+      <span style="font-size:12px;color:var(--tx3)">Step ${wizStep+1} of ${total}</span>
+    </div>
+    <div class="wizSteps">${bars}</div>
+    ${body}
+    <div class="wizNav">
+      <button class="btn gho" data-a="${wizStep===0?'cancelWiz':'wizBack'}">${wizStep===0?'Cancel':'&larr; Back'}</button>
+      <button class="btn pri" data-a="${isLast?'wizFinish':'wizNext'}">${isLast?'Build my schedule':'Continue &rarr;'}</button>
+    </div>
+  </div></div>`;
+}
+
+function wizBasics(){
+  const d=wizDraft;
+  return `<h2 class="wizH">Let's start with the property</h2>
+  <p class="wizP">Basic details so you can tell properties apart later.</p>
+  <div class="card">
+    <label class="f"><span>Nickname</span>
+      <input class="inp" data-d="nickname" value="${esc(d.nickname)}" placeholder="Lake House, Unit 2B, Main St duplex"></label>
+    <label class="f"><span>Address</span>
+      <input class="inp" data-d="address" value="${esc(d.address)}" placeholder="1247 Rosewood Ln, Austin TX 78704"></label>
+    <div class="grid3">
+      <label class="f"><span>Property type</span>
+        <select class="inp" data-d="type">
+          ${['Single-family','Condo','Townhouse','Duplex','Multi-family','Short-term rental','Commercial'].map(t=>`<option${t===d.type?' selected':''}>${t}</option>`).join('')}
+        </select></label>
+      <label class="f"><span>Bedrooms</span><input class="inp" type="number" min="0" data-d="beds" value="${esc(d.beds)}" placeholder="3"></label>
+      <label class="f"><span>Year built</span><input class="inp" type="number" data-d="year" value="${esc(d.year)}" placeholder="1998"></label>
+    </div>
+    ${dateField('Roughly when was the property last given a full maintenance pass?','data-d="baseline"',d.baseline,
+      'This anchors the first due date for tasks you have never logged. An honest guess is fine; you can log real completion dates later.',
+      [['Today',0],['3 months ago',-91],['6 months ago',-182],['A year ago',-365],['2 years ago',-730]])}
+  </div>`;
+}
+
+function wizGroup(g){
+  const d=wizDraft;
+  const opts=g.opts.map(o=>{
+    const on=d.systems.includes(o.k);
+    return `<button class="opt${on?' on':''}" data-opt="${o.k}" data-group="${g.id}">
+      <span class="optCk">${on?'&#10003;':''}</span>
+      <span><span class="optT">${o.t}</span><span class="optD">${o.d}</span></span></button>`;
+  }).join('');
+  return `<h2 class="wizH">${g.q}</h2>
+  <p class="wizP">${g.sub||'Select all that apply. Anything you skip simply will not appear on your schedule.'}</p>
+  <div class="optGrid">${opts}</div>`;
+}
+
+function wizAppliances(){
+  const d=wizDraft;
+  const keys=d.systems.filter(k=>APPLIANCE_KEYS[k]);
+  if(!keys.length) return `<h2 class="wizH">No appliances to detail</h2>
+    <p class="wizP">You did not select any appliances or mechanical systems that need a service record. Continue on.</p>`;
+  const filled=keys.filter(k=>{const a=d.appliances.find(x=>x.key===k)||{};return a.brand&&a.model&&a.year}).length;
+  const rows=keys.map(k=>{
+    const a=d.appliances.find(x=>x.key===k)||{};
+    const done=a.brand&&a.model&&a.year;
+    return `<div style="border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:10px">
+      <div style="font-weight:650;font-size:13.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        ${APPLIANCE_KEYS[k]}
+        ${done?'<span class="pill ok">Complete</span>':'<span class="pill neu">Optional for now</span>'}</div>
+      <div class="grid3">
+        <label class="f"><span>Brand</span><input class="inp" data-ap="${k}" data-fld="brand" value="${esc(a.brand)}" placeholder="Carrier"></label>
+        <label class="f"><span>Model number</span><input class="inp" data-ap="${k}" data-fld="model" value="${esc(a.model)}" placeholder="24ACC636A003"></label>
+        <label class="f"><span>Year installed</span>${yearSelect(`data-ap="${k}" data-fld="year"`,a.year)}</label>
+      </div>
+    </div>`;
+  }).join('');
+  return `<h2 class="wizH">Appliance and system details</h2>
+  <p class="wizP">Brand, model, and install year. This is what you scramble for when something breaks at 9pm, and it drives the age-based replacement warnings.</p>
+  <div class="nag" style="margin-bottom:14px">&#9432;
+    <div>You do not need this now. Most of it is on a sticker behind or inside the unit, so skip ahead and fill it in when you are next at the property. PropertyPulse will keep reminding you until it is done.</div>
+    <button class="btn sm" data-a="wizSkipAppl">Skip for now</button></div>
+  <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">${filled} of ${keys.length} complete</div>
+  <div class="card" style="max-height:400px;overflow-y:auto">${rows}</div>`;
+}
+
+function wizVendors(){
+  const d=wizDraft;
+  const list=d.vendors.length?d.vendors.map((v,i)=>`
+    <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px">
+      <div style="flex:1"><div style="font-weight:640;font-size:13.5px">${esc(v.name)}</div>
+      <div style="font-size:12px;color:var(--tx3)">${(v.trades||[]).map(t=>TRADES[t]).join(', ')} &middot; ${esc(v.location||'')} &middot; ${esc(v.phone||'')}</div></div>
+      <button class="btn sm dgr" data-a="wizDelVendor" data-i="${i}">Remove</button></div>`).join('')
+    :`<div class="empty" style="padding:24px"><p>No vendors yet. You can add them now or later from the Vendors tab.</p></div>`;
+  return `<h2 class="wizH">Who do you call?</h2>
+  <p class="wizP">Add the trades you already use. PropertyPulse attaches the right vendor to each scheduled task automatically, so you are never hunting for a number.</p>
+  <div class="card">${list}
+    <button class="btn pri sm" style="width:100%;margin-top:6px" data-a="wizAddVendor">+ Add vendor</button></div>`;
+}
+
+function wizReview(){
+  const d=wizDraft;
+  const sys=new Set(d.systems);
+  const applicable=RULES.filter(r=>r.req.includes('*')||r.req.some(k=>sys.has(k)));
+  const byFreq={};
+  applicable.forEach(r=>{const l=everyLabel(r.every);(byFreq[l]=byFreq[l]||[]).push(r.n)});
+  const order=Object.keys(byFreq).sort((a,b)=>byFreq[b].length-byFreq[a].length);
+  const blocks=order.map(l=>`<div style="margin-bottom:14px">
+    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--tx3);font-weight:700;margin-bottom:6px">${l} &middot; ${byFreq[l].length}</div>
+    <div style="font-size:13px;color:var(--tx2);line-height:1.75">${byFreq[l].map(esc).join(' &middot; ')}</div></div>`).join('');
+  const yearly=applicable.reduce((s,r)=>s+12/r.every,0);
+  return `<h2 class="wizH">Your schedule is ready</h2>
+  <p class="wizP">Based on your answers, PropertyPulse will track <b style="color:var(--tx)">${applicable.length} recurring maintenance items</b>, which works out to roughly <b style="color:var(--tx)">${Math.round(yearly)} service events a year</b>.</p>
+  <div class="card" style="max-height:340px;overflow-y:auto">${blocks}</div>
+  <p class="hint" style="margin-top:10px">You can remove any item you do not want, change intervals, and add your own custom tasks after setup.</p>`;
+}
+
+/* ============================================================
+   9. SCHEDULE VIEW
+   ============================================================ */
+let schFilter='all';
+function Schedule(p,sch){
+  if(!p) return NoProp();
+  const filtered=schFilter==='all'?sch
+    :schFilter==='overdue'?sch.filter(x=>x.status==='overdue')
+    :schFilter==='90'?sch.filter(x=>x.days<=90)
+    :sch.filter(x=>x.status!=='future'||x.days<=365);
+
+  // group by month
+  const groups={};
+  filtered.forEach(t=>{const k=t.status==='overdue'?'Past due':monthKey(t.due);(groups[k]=groups[k]||[]).push(t)});
+  const html=Object.keys(groups).map(k=>`<div class="tlMo">${k} &middot; ${groups[k].length}</div>
+    ${groups[k].map(taskRow).join('')}`).join('');
+
+  return `<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div class="segs">
+      ${[['all','Everything'],['overdue','Past due'],['90','Next 90 days'],['year','This year']]
+        .map(([k,l])=>`<button class="seg${schFilter===k?' on':''}" data-a="schFilter" data-k="${k}">${l}</button>`).join('')}
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn sm" data-a="addCustom">+ Custom item</button>
+    <button class="btn sm" data-a="exportCsv">Export CSV</button>
+  </div>
+  ${filtered.length?html:'<div class="card"><div class="empty"><p>Nothing matches this filter.</p></div></div>'}`;
+}
+
+/* ============================================================
+   9b. WALKTHROUGHS
+   ============================================================ */
+function Walkthroughs(p){
+  if(!p) return NoProp();
+  const list=activeWalkthroughs(p.id);
+  const rows=list.map(w=>{
+    const pr=wtProgress(w), fl=wtFlags(w).length;
+    const v=S.vendors.find(x=>x.id===w.vendorId);
+    const photos=w.items.filter(i=>i.photo).length;
+    return `<div class="task ${w.status==='complete'?'fut':'soon'}">
+      <div class="taskBody">
+        <div class="taskTop">
+          <span class="taskName">Walkthrough &middot; ${fmt(w.started)}</span>
+          ${w.status==='complete'?'<span class="pill ok">Complete</span>':`<span class="pill warn">${pr.pct}% done</span>`}
+          ${fl?`<span class="pill bad">${fl} need${fl===1?'s':''} attention</span>`:''}
+        </div>
+        <div class="taskMeta">
+          <span>Assigned to <b>${esc(v?v.name:'Myself')}</b></span><span class="dot">&middot;</span>
+          <span>${pr.done} of ${pr.total} items</span><span class="dot">&middot;</span>
+          <span>${photos} photo${photos===1?'':'s'}</span>
+          ${w.completed?`<span class="dot">&middot;</span><span>Finished ${fmt(w.completed)}</span>`:''}
+        </div>
+        <div class="prog" style="margin-top:9px;max-width:280px"><div class="progFill" style="width:${pr.pct}%"></div></div>
+      </div>
+      <div class="taskActs">
+        <button class="btn sm pri" data-a="openWalk" data-id="${w.id}">${w.status==='complete'?'View report':'Continue'}</button>
+        ${v&&w.status!=='complete'?`<button class="btn sm" data-a="copyWalkLink" data-id="${w.id}" title="Send this to ${esc(v.name)}. No account needed.">Copy link</button>`:''}
+        <button class="btn sm gho dgr" data-a="delWalk" data-id="${w.id}">&times;</button>
+      </div></div>`;
+  }).join('');
+
+  return `<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Property walkthroughs</div>
+      <div class="cardSub">A room-by-room checklist built from this property's systems. Whoever runs it records a photo and a note for each item.</div></div>
+      <div style="flex:1"></div><button class="btn pri sm" data-a="newWalk">+ Start walkthrough</button></div>
+    ${list.length?rows:`<div class="empty">
+      <h3>No walkthroughs yet</h3>
+      <p>Start one and PropertyPulse generates a checklist covering only what this property actually has. Assign it to a vendor and send them the link, or walk it yourself.</p>
+      <button class="btn pri" data-a="newWalk">Start the first walkthrough</button></div>`}
+  </div>`;
+}
+
+function WalkDetail(id,vendorMode){
+  const w=S.walkthroughs.find(x=>x.id===id);
+  if(!w) return `<div class="card"><div class="empty"><h3>Walkthrough not found</h3>
+    <p>This link may be out of date.</p></div></div>`;
+  const prop=S.properties.find(x=>x.id===w.propId);
+  const v=S.vendors.find(x=>x.id===w.vendorId);
+  const pr=wtProgress(w), fl=wtFlags(w);
+  const locked=w.status==='complete';
+
+  const areas=[...new Set(w.items.map(i=>i.area))];
+  const body=areas.map(area=>{
+    const items=w.items.filter(i=>i.area===area);
+    const rows=items.map(i=>`
+      <div class="wtItem ${i.status}">
+        <div class="wtTop">
+          <div class="wtLabel">${esc(i.label)}</div>
+          ${locked?`<span class="pill ${i.status==='ok'?'ok':i.status==='attention'?'bad':'neu'}">
+              ${i.status==='ok'?'Good':i.status==='attention'?'Needs attention':i.status==='na'?'N/A':'Not checked'}</span>`
+          :`<div class="wtBtns">
+            <button class="wtBtn ok${i.status==='ok'?' on':''}" data-a="wtSet" data-id="${i.id}" data-v="ok">Good</button>
+            <button class="wtBtn attention${i.status==='attention'?' on':''}" data-a="wtSet" data-id="${i.id}" data-v="attention">Attention</button>
+            <button class="wtBtn na${i.status==='na'?' on':''}" data-a="wtSet" data-id="${i.id}" data-v="na">N/A</button>
+          </div>`}
+        </div>
+        ${(i.status||i.note||i.photo)?`<div class="wtBody">
+          <div class="wtNote">
+            ${locked
+              ?(i.note?`<div style="font-size:12.5px;color:var(--tx2)">${esc(i.note)}</div>`
+                     :'<div style="font-size:12.5px;color:var(--tx3)">No note recorded</div>')
+              :`<textarea class="inp" style="min-height:54px;font-size:12.5px" data-wtnote="${i.id}"
+                  placeholder="What did you see? Be specific: location, size, severity.">${esc(i.note)}</textarea>`}
+          </div>
+          <div class="wtPhotoBox">
+            ${i.photo
+              ?`<img class="wtThumb" src="${i.photo}" data-a="lightbox" data-src="${i.photo}" alt="${esc(i.label)}">
+                ${locked?'':`<div class="wtPhotoActs"><button data-a="wtDelPhoto" data-id="${i.id}">Remove</button></div>`}`
+              :(locked?'<div class="wtUpload" style="cursor:default">No photo</div>'
+                :`<label class="wtUpload">Add photo<input type="file" accept="image/*" data-wtphoto="${i.id}"></label>`)}
+          </div>
+        </div>`:''}
+      </div>`).join('');
+    const flagged=items.filter(i=>i.status==='attention').length;
+    return `<div class="wtArea">${esc(area)} &middot; ${items.filter(i=>i.status).length}/${items.length}
+      ${flagged?`<span style="color:var(--bad)"> &middot; ${flagged} flagged</span>`:''}</div>${rows}`;
+  }).join('');
+
+  const summary=locked&&fl.length?`<div class="card" style="border-color:rgba(248,113,113,.3);margin-bottom:16px">
+    <div class="cardHd"><div><div class="cardTitle" style="color:var(--bad)">${fl.length} item${fl.length===1?'':'s'} flagged for attention</div>
+      <div class="cardSub">Pulled from the completed checklist</div></div></div>
+    ${fl.map(i=>`<div style="padding:9px 0;border-bottom:1px solid var(--line);display:flex;gap:11px;align-items:flex-start">
+      ${i.photo?`<img class="wtThumb" style="width:64px;height:48px" src="${i.photo}" data-a="lightbox" data-src="${i.photo}" alt="">`:''}
+      <div><div style="font-weight:620;font-size:13px">${esc(i.area)}: ${esc(i.label)}</div>
+      <div style="font-size:12.5px;color:var(--tx2)">${esc(i.note)||'No note recorded'}</div></div></div>`).join('')}
+  </div>`:'';
+
+  const header=`<div class="card" style="margin-bottom:16px">
+    <div class="wtHead">
+      <div><div class="cardTitle">${esc(prop?prop.nickname||prop.address:'Property')}</div>
+        <div class="cardSub">Started ${fmt(w.started)} &middot; assigned to ${esc(v?v.name:'the owner')}</div></div>
+      <div style="flex:1"></div>
+      <div style="text-align:right"><div style="font-size:20px;font-weight:750">${pr.pct}%</div>
+        <div style="font-size:11px;color:var(--tx3)">${pr.done} of ${pr.total}</div></div>
+    </div>
+    <div class="prog"><div class="progFill" style="width:${pr.pct}%"></div></div>
+    ${!locked?`<div class="hint" style="margin-top:10px">Mark every item, add a note where something stands out, and photograph anything flagged. Progress saves as you go.</div>`:''}
+  </div>`;
+
+  const footer=locked?'':`<div class="wtSticky">
+    <div style="font-size:12.5px;color:var(--tx3)">${pr.total-pr.done} item${pr.total-pr.done===1?'':'s'} left${fl.length?` &middot; ${fl.length} flagged`:''}</div>
+    <div style="flex:1"></div>
+    ${vendorMode?'':'<button class="btn" data-a="backToWalks">Save and close</button>'}
+    <button class="btn pri" data-a="finishWalk" data-id="${w.id}" ${pr.done<pr.total?'title="Some items are still unchecked"':''}>Complete walkthrough</button>
+  </div>`;
+
+  return `${header}${summary}${body}${footer}`;
+}
+
+/* Vendor-facing page: same checklist, no owner navigation */
+function VendorWalk(){
+  const w=S.walkthroughs.find(x=>x.id===S.activeWalk);
+  const prop=w?S.properties.find(x=>x.id===w.propId):null;
+  const v=w?S.vendors.find(x=>x.id===w.vendorId):null;
+  return `<div class="land" style="align-items:stretch">
+    <div class="landNav" style="border-bottom:1px solid var(--line);max-width:100%;width:100%;justify-content:center">
+      <div style="max-width:880px;width:100%;display:flex;align-items:center;gap:12px">
+        <div class="brandMark">P</div>
+        <div><div class="brandName">Walkthrough checklist</div>
+          <div style="font-size:11.5px;color:var(--tx3)">${esc(prop?prop.nickname||prop.address:'')}${v?' &middot; '+esc(v.name):''}</div></div>
+        <div style="flex:1"></div>
+        <button class="btn sm gho" data-a="home">Exit</button>
+      </div>
+    </div>
+    <div style="max-width:880px;margin:0 auto;padding:24px;width:100%">
+      ${w?WalkDetail(S.activeWalk,true):`<div class="card"><div class="empty">
+        <h3>Walkthrough not found</h3><p>Ask the owner to resend the link.</p></div></div>`}
+    </div></div>`;
+}
+
+/* ============================================================
+   10. REQUESTS (guest-reported issues)
+   ============================================================ */
+function Requests(){
+  const open=S.requests.filter(r=>r.status!=='closed');
+  const closed=S.requests.filter(r=>r.status==='closed');
+  if(!S.requests.length) return `<div class="card"><div class="empty">
+    <h3>No maintenance requests yet</h3>
+    <p>When a guest or tenant reports an issue through the guest portal, it lands here and they can follow its status.</p>
+    <button class="btn pri" data-a="guestPortal">Open the guest portal</button></div></div>`;
+  return `<div class="card"><div class="cardHd"><div><div class="cardTitle">Open requests</div>
+    <div class="cardSub">Reported by guests and tenants</div></div>
+    <div style="flex:1"></div><span class="pill ${open.length?'warn':'ok'}">${open.length} open</span></div>
+    ${open.length?open.map(reqRow).join(''):'<div class="empty"><p>Nothing open. All caught up.</p></div>'}</div>
+    ${closed.length?`<div class="card"><div class="cardHd"><div class="cardTitle">Closed</div></div>
+      ${closed.map(reqRow).join('')}</div>`:''}`;
+}
+
+function reqRow(r){
+  const p=S.properties.find(x=>x.id===r.propId);
+  const v=suggestVendors(r.trade);
+  const urg={low:'neu',normal:'acc',high:'warn',emergency:'bad'}[r.urgency]||'neu';
+  const st={new:'bad',ack:'warn',scheduled:'acc',closed:'ok'}[r.status]||'neu';
+  const stL={new:'New',ack:'Acknowledged',scheduled:'Scheduled',closed:'Resolved'}[r.status];
+  return `<div class="task ${r.status==='new'?'od':r.status==='closed'?'fut':'soon'}">
+    <div class="taskBody">
+      <div class="taskTop"><span class="taskName">${esc(r.title)}</span>
+        <span class="pill ${st}">${stL}</span>
+        <span class="pill ${urg}">${esc(r.urgency)}</span></div>
+      <div class="taskMeta">
+        <span>From <b>${esc(r.guestName)}</b></span><span class="dot">&middot;</span>
+        <span>${esc(p?p.nickname||p.address:'')}</span><span class="dot">&middot;</span>
+        <span>${fmt(r.created)}</span>
+        ${r.trade?`<span class="dot">&middot;</span><span>${esc(TRADES[r.trade])}</span>`:''}
+      </div>
+      <div style="font-size:12.5px;color:var(--tx2);margin-top:6px">${esc(r.body)}</div>
+      ${v.length&&hasExactVendor(r.trade)
+        ?`<div class="vendorChip">&#9782; Suggested: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}</div>`
+        :(r.trade&&r.status!=='closed'
+          ?`<div>${v.length?`<div class="vendorChip" style="color:var(--tx3)">No ${esc(TRADES[r.trade])} vendor saved. Closest: <b style="color:var(--tx2)">${esc(v[0].name)}</b></div>`:''}
+             ${findLocalBtn(r.trade,p,r.title)}</div>`:'')}
+      ${r.note?`<div style="font-size:12px;color:var(--tx3);margin-top:6px;padding-left:9px;border-left:2px solid var(--line2)">Your reply: ${esc(r.note)}</div>`:''}
+    </div>
+    <div class="taskActs">
+      ${r.status!=='closed'?`<button class="btn sm" data-a="advReq" data-id="${r.id}">Update</button>`:''}
+      <button class="btn sm gho dgr" data-a="delReq" data-id="${r.id}">&times;</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   11. PROPERTIES / APPLIANCES / VENDORS
+   ============================================================ */
+function Props(){
+  const rows=S.properties.map(p=>{
+    const sch=buildSchedule(p.id);
+    const od=sch.filter(x=>x.status==='overdue').length;
+    return `<tr>
+      <td><b>${esc(p.nickname||'Untitled')}</b><div style="font-size:12px;color:var(--tx3)">${esc(p.address)}</div></td>
+      <td>${esc(p.type||'')}</td>
+      <td>${(p.systems||[]).length} systems</td>
+      <td>${sch.length} tasks</td>
+      <td>${od?`<span class="pill bad">${od} overdue</span>`:'<span class="pill ok">Current</span>'}</td>
+      <td style="text-align:right">
+        <button class="btn sm" data-a="setActive" data-id="${p.id}">Open</button>
+        <button class="btn sm gho dgr" data-a="delProp" data-id="${p.id}">&times;</button></td></tr>`;
+  }).join('');
+  return `<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Your properties</div>
+      <div class="cardSub">Each keeps its own systems, appliances, and schedule</div></div>
+      <div style="flex:1"></div><button class="btn pri sm" data-a="startWizard">+ Add property</button></div>
+    ${S.properties.length?`<table class="tbl"><thead><tr><th>Property</th><th>Type</th><th>Systems</th><th>Tasks</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      :'<div class="empty"><p>No properties yet.</p></div>'}</div>`;
+}
+
+function Appliances(){
+  const p=activeProp();
+  if(!p) return NoProp();
+  const list=S.appliances.filter(a=>a.propId===p.id);
+  const age=y=>y?(new Date().getFullYear()-Number(y)):null;
+  const inc=incompleteAppliances(p.id);
+  const miss='<span style="color:var(--warn)">Missing</span>';
+  const rows=list.map(a=>{
+    const yrs=age(a.year);
+    const life={fridge:14,dishwash:10,washer:11,dryer:13,range:15,micro:9,disposal:10,hood:14,
+      furnace:20,heatpump:15,centralac:15,boiler:25,minisplit:15,tankwh:11,tankless:20,
+      softener:12,sump:8,garage:15}[a.key]||15;
+    const pct=yrs?Math.min(100,Math.round(yrs/life*100)):null;
+    const warn=pct===null?'<span class="pill acc">Add year to assess</span>'
+      :pct>=100?'<span class="pill bad">Past expected life</span>'
+      :pct>=80?'<span class="pill warn">Nearing end of life</span>':'<span class="pill ok">Healthy</span>';
+    return `<tr${applIncomplete(a)?' style="background:rgba(79,156,249,.05)"':''}>
+      <td><b>${esc(APPLIANCE_KEYS[a.key]||a.key)}</b>
+        ${applIncomplete(a)?`<div style="font-size:11.5px;color:var(--acc)">Needs ${esc(missingFields(a).join(', '))}</div>`:''}</td>
+      <td>${esc(a.brand)||miss}</td>
+      <td style="font-family:ui-monospace,monospace;font-size:12.5px">${esc(a.model)||miss}</td>
+      <td>${esc(a.year)||miss}${yrs!==null?` <span style="color:var(--tx3)">(${yrs}y)</span>`:''}</td>
+      <td>${warn}</td>
+      <td style="text-align:right"><button class="btn sm${applIncomplete(a)?' pri':''}" data-a="editAppl" data-id="${a.id}">${applIncomplete(a)?'Complete':'Edit'}</button></td></tr>`;
+  }).join('');
+  const nag=inc.length?`<div class="nag">&#9432;
+    <div><b>${inc.length} of ${list.length} still need details.</b> Model numbers are usually on a sticker inside the door, behind the unit, or on the side panel. Photograph them once and you are done for good.</div>
+    <button class="btn sm pri" data-a="editAppl" data-id="${inc[0].id}">Start with ${esc(APPLIANCE_KEYS[inc[0].key]||inc[0].key)}</button></div>`:'';
+  return `${nag}<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Appliances &amp; systems</div>
+      <div class="cardSub">Expected-life warnings are based on install year</div></div>
+      <div style="flex:1"></div><button class="btn pri sm" data-a="addAppl">+ Add</button></div>
+    ${list.length?`<table class="tbl"><thead><tr><th>Item</th><th>Brand</th><th>Model</th><th>Installed</th><th>Condition</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      :'<div class="empty"><p>No appliances recorded for this property.</p></div>'}</div>`;
+}
+
+function Vendors(){
+  const rows=S.vendors.map(v=>`<tr>
+    <td><b>${esc(v.name)}</b>${v.notes?`<div style="font-size:12px;color:var(--tx3)">${esc(v.notes)}</div>`:''}</td>
+    <td>${(v.trades||[]).map(t=>`<span class="pill neu" style="margin:1px 2px 1px 0">${esc(TRADES[t]||t)}</span>`).join('')}</td>
+    <td>${esc(v.location)||'&ndash;'}</td>
+    <td>${v.phone?`<a href="tel:${esc(v.phone)}">${esc(v.phone)}</a>`:'&ndash;'}</td>
+    <td>${v.email?`<a href="mailto:${esc(v.email)}">${esc(v.email)}</a>`:'&ndash;'}</td>
+    <td style="text-align:right"><button class="btn sm" data-a="editVendor" data-id="${v.id}">Edit</button>
+      <button class="btn sm gho dgr" data-a="delVendor" data-id="${v.id}">&times;</button></td></tr>`).join('');
+
+  // coverage gaps: trades needed by the schedule with no vendor
+  const p=activeProp();
+  let gaps=[];
+  if(p){
+    const needed=new Set(buildSchedule(p.id).map(t=>t.trade).filter(Boolean));
+    gaps=[...needed].filter(t=>!S.vendors.some(v=>(v.trades||[]).includes(t)));
+  }
+  const gapCard=gaps.length?`<div class="card" style="border-color:rgba(251,191,36,.3)">
+    <div class="cardHd"><div><div class="cardTitle" style="color:var(--warn)">&#9888; ${gaps.length} coverage gap${gaps.length===1?'':'s'}</div>
+      <div class="cardSub">Your schedule needs these trades but no vendor is saved. Each button opens a Google search for that trade near ${esc(propLocation(p)||'your property')}.</div></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${gaps.map(t=>`<a class="findLocal" target="_blank" rel="noopener noreferrer" href="${googleUrl(t,p)}"
+        style="font-size:12.5px;padding:7px 13px">&#128269; Find a local ${esc((TRADES[t]||t).toLowerCase())}</a>`).join('')}
+    </div></div>`:'';
+
+  return `${gapCard}<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Vendor directory</div>
+      <div class="cardSub">Matched to tasks automatically by trade</div></div>
+      <div style="flex:1"></div><button class="btn pri sm" data-a="addVendor">+ Add vendor</button></div>
+    ${S.vendors.length?`<table class="tbl"><thead><tr><th>Vendor</th><th>Trades</th><th>Location</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      :'<div class="empty"><p>No vendors saved yet.</p></div>'}</div>`;
+}
+
+function Settings(){
+  const p=activeProp();
+  return `<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Notifications</div>
+      <div class="cardSub">How you find out something is past due</div></div></div>
+    <label class="f"><span>Your email</span><input class="inp" data-s="ownerEmail" value="${esc(S.owner.email)}" placeholder="you@example.com"></label>
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)">
+      <div style="flex:1"><div style="font-weight:600;font-size:13.5px">Weekly email digest</div>
+        <div style="font-size:12px;color:var(--tx3)">Everything overdue plus the next 30 days, every Monday morning.</div></div>
+      <button class="btn sm ${S.prefs.emailDigest?'pri':''}" data-a="toggleDigest">${S.prefs.emailDigest?'On':'Off'}</button></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)">
+      <div style="flex:1"><div style="font-weight:600;font-size:13.5px">WhatsApp alerts</div>
+        <div style="font-size:12px;color:var(--tx3)">Requires a paid messaging provider. Wired up in phase 2.</div></div>
+      <span class="pill neu">Not connected</span></div>
+    <button class="btn" style="margin-top:12px" data-a="preview">Preview digest email</button>
+  </div>
+  <div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Guest portal link</div>
+      <div class="cardSub">Share this with tenants and guests so they can report issues</div></div></div>
+    <div style="display:flex;gap:8px">
+      <input class="inp" readonly id="portalLink" value="${location.href.split('#')[0]}#guest${p?'/'+p.id:''}">
+      <button class="btn" data-a="copyLink">Copy</button></div>
+    <div class="hint">In the deployed version this becomes a real per-property link with its own access code.</div>
+  </div>
+  ${storageCard()}
+  <div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Data</div></div></div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <button class="btn" data-a="exportJson">Export all data</button>
+      <button class="btn" data-a="exportCsv">Export schedule CSV</button>
+      <button class="btn dgr" data-a="wipe">Erase everything</button></div>
+    <div class="hint">Prototype data lives in this browser only. Phase 2 moves it to a hosted database so it follows you across devices.</div>
+  </div>`;
+}
+
+/* Walkthrough photos are the one thing here that can actually fill a browser's
+   ~5 MB storage quota, and hitting it silently loses work. Show the number
+   before it becomes a problem rather than after. */
+function storageCard(){
+  const kb=storageUsed(), capKb=5000;
+  const pct=Math.min(100,Math.round(kb/capKb*100));
+  const photos=S.walkthroughs.reduce((n,w)=>n+w.items.filter(i=>i.photo).length,0);
+  const tone=pct>=85?'bad':pct>=60?'warn':'ok';
+  return `<div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Browser storage</div>
+      <div class="cardSub">${photos} walkthrough photo${photos===1?'':'s'} stored on this device</div></div>
+      <div style="flex:1"></div><span class="pill ${tone}">${pct}% of ~5 MB</span></div>
+    <div class="prog"><div class="progFill" style="width:${pct}%${pct>=85?';background:var(--bad)':pct>=60?';background:var(--warn)':''}"></div></div>
+    <div class="hint" style="margin-top:10px">${kb} KB used. Photos are shrunk to thumbnails on upload, so this fills slowly.
+      ${pct>=60?'Export your data or delete an old walkthrough to free space.':'Phase 2 moves photos to hosted storage and this limit goes away.'}</div>
+  </div>`;
+}
+
+/* ============================================================
+   12. GUEST PORTAL
+   ============================================================ */
+function GuestPortal(){
+  const props=S.properties;
+  const g=guestCtx||{};
+  const mine=g.email?S.requests.filter(r=>r.guestEmail&&r.guestEmail.toLowerCase()===g.email.toLowerCase()):[];
+  const p=props.find(x=>x.id===(g.propId||S.activeProp))||props[0];
+
+  const myList=mine.length?mine.map(r=>{
+    const stL={new:'Received',ack:'Owner notified',scheduled:'Vendor scheduled',closed:'Resolved'}[r.status];
+    const st={new:'warn',ack:'acc',scheduled:'acc',closed:'ok'}[r.status];
+    return `<div class="task ${r.status==='closed'?'fut':'soon'}"><div class="taskBody">
+      <div class="taskTop"><span class="taskName">${esc(r.title)}</span><span class="pill ${st}">${stL}</span></div>
+      <div class="taskMeta"><span>Submitted ${fmt(r.created)}</span></div>
+      <div style="font-size:12.5px;color:var(--tx2);margin-top:5px">${esc(r.body)}</div>
+      ${r.note?`<div style="font-size:12.5px;color:var(--acc);margin-top:7px;padding:8px 10px;background:var(--accDim);border-radius:7px">
+        <b>Update from the owner:</b> ${esc(r.note)}</div>`:''}
+    </div></div>`}).join('')
+    : `<div class="empty" style="padding:26px"><p>${g.email?'You have no submitted requests yet.':'Enter your email above to see the status of requests you have submitted.'}</p></div>`;
+
+  return `<div class="land" style="align-items:stretch">
+  <div class="landNav" style="margin:0 auto;border-bottom:1px solid var(--line);max-width:100%;width:100%;justify-content:center">
+    <div style="max-width:800px;width:100%;display:flex;align-items:center;gap:12px">
+      <div class="brandMark">P</div>
+      <div><div class="brandName">Guest maintenance portal</div>
+        <div style="font-size:11.5px;color:var(--tx3)">${esc(p?p.nickname||p.address:'')}</div></div>
+      <div style="flex:1"></div>
+      <button class="btn sm gho" data-a="home">Exit</button>
+    </div>
+  </div>
+  <div style="max-width:800px;margin:0 auto;padding:26px 24px;width:100%">
+    <div class="card">
+      <div class="cardHd"><div><div class="cardTitle">Report an issue</div>
+        <div class="cardSub">The owner is notified immediately and you can track the status below</div></div></div>
+      <div class="grid2">
+        <label class="f"><span>Your name</span><input class="inp" data-g="name" value="${esc(g.name)}" placeholder="Jordan Reyes"></label>
+        <label class="f"><span>Your email</span><input class="inp" data-g="email" value="${esc(g.email)}" placeholder="you@example.com"></label>
+      </div>
+      ${props.length>1?`<label class="f"><span>Which property?</span><select class="inp" data-g="propId">
+        ${props.map(x=>`<option value="${x.id}"${x.id===(g.propId||p.id)?' selected':''}>${esc(x.nickname||x.address)}</option>`).join('')}</select></label>`:''}
+      <label class="f"><span>What is the issue?</span><input class="inp" data-g="title" value="${esc(g.title)}" placeholder="Kitchen sink draining slowly"></label>
+      <div class="grid2">
+        <label class="f"><span>Category</span><select class="inp" data-g="trade">
+          <option value="">Not sure</option>
+          ${Object.entries(TRADES).map(([k,v])=>`<option value="${k}"${g.trade===k?' selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>Urgency</span><select class="inp" data-g="urgency">
+          ${['low','normal','high','emergency'].map(u=>`<option value="${u}"${g.urgency===u?' selected':''}>${u[0].toUpperCase()+u.slice(1)}</option>`).join('')}</select></label>
+      </div>
+      <label class="f"><span>Details</span><textarea class="inp" data-g="body" placeholder="When did it start, what have you tried, anything else useful.">${esc(g.body)}</textarea></label>
+      <button class="btn pri" style="width:100%" data-a="submitReq">Submit request</button>
+      <div class="hint" style="text-align:center">The owner receives this immediately. Emergencies involving gas, fire, or flooding: call emergency services first.</div>
+    </div>
+    <div class="card">
+      <div class="cardHd"><div><div class="cardTitle">Your requests</div>
+        <div class="cardSub">Status updates appear here</div></div></div>
+      ${myList}
+    </div>
+  </div></div>`;
+}
+
+/* ============================================================
+   13. MODALS
+   ============================================================ */
+const MR=document.getElementById('modalRoot');
+function closeModal(){ MR.innerHTML='' }
+function openModal(title,bodyHtml,footHtml){
+  MR.innerHTML=`<div class="modalBg" data-a="modalBg"><div class="modal">
+    <div class="modalHd"><div class="modalTitle">${title}</div><button class="x" data-a="closeModal">&times;</button></div>
+    <div class="modalBd">${bodyHtml}</div>
+    <div class="modalFt">${footHtml}</div></div></div>`;
+  const first=MR.querySelector('input,select,textarea'); if(first) first.focus();
+}
+
+function vendorModal(v){
+  const e=v||{id:uid(),name:'',trades:[],location:'',email:'',phone:'',notes:''};
+  const chips=Object.entries(TRADES).map(([k,l])=>
+    `<button class="opt${(e.trades||[]).includes(k)?' on':''}" data-vtrade="${k}" style="padding:8px 10px">
+      <span class="optCk" style="width:15px;height:15px">${(e.trades||[]).includes(k)?'&#10003;':''}</span>
+      <span class="optT" style="font-size:12.5px">${l}</span></button>`).join('');
+  openModal(v?'Edit vendor':'Add vendor',
+    `<input type="hidden" id="vid" value="${e.id}">
+     <label class="f"><span>Business name</span><input class="inp" id="vname" value="${esc(e.name)}" placeholder="Hill Country HVAC"></label>
+     <label class="f"><span>Trades they cover</span></label>
+     <div class="optGrid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:14px" id="vtrades">${chips}</div>
+     <div class="grid2">
+       <label class="f"><span>Location</span><input class="inp" id="vloc" value="${esc(e.location)}" placeholder="Austin, TX"></label>
+       <label class="f"><span>Phone</span><input class="inp" id="vphone" value="${esc(e.phone)}" placeholder="(512) 555-0184"></label>
+     </div>
+     <label class="f"><span>Email</span><input class="inp" id="vemail" value="${esc(e.email)}" placeholder="service@example.com"></label>
+     <label class="f"><span>Notes</span><input class="inp" id="vnotes" value="${esc(e.notes)}" placeholder="Ask for Dave, 10% off for repeat jobs"></label>`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveVendor" data-wiz="${wizMode?1:0}">Save vendor</button>`);
+  MR.querySelectorAll('[data-vtrade]').forEach(b=>b.onclick=()=>{
+    b.classList.toggle('on');
+    b.querySelector('.optCk').innerHTML=b.classList.contains('on')?'&#10003;':'';
+  });
+}
+let wizMode=false;
+
+function applianceModal(a){
+  const e=a||{id:uid(),key:'fridge',brand:'',model:'',year:''};
+  openModal(a?'Edit item':'Add appliance or system',
+    `<input type="hidden" id="aid" value="${e.id}">
+     <label class="f"><span>What is it?</span><select class="inp" id="akey">
+       ${Object.entries(APPLIANCE_KEYS).map(([k,l])=>`<option value="${k}"${e.key===k?' selected':''}>${l}</option>`).join('')}</select></label>
+     <div class="grid3">
+       <label class="f"><span>Brand</span><input class="inp" id="abrand" value="${esc(e.brand)}" placeholder="Whirlpool"></label>
+       <label class="f"><span>Model number</span><input class="inp" id="amodel" value="${esc(e.model)}" placeholder="WRF535SWHZ"></label>
+       <label class="f"><span>Year installed</span><input class="inp" type="number" id="ayear" value="${esc(e.year)}" placeholder="2021"></label>
+     </div>`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveAppl">Save</button>`);
+}
+
+function customModal(){
+  openModal('Add a maintenance item',
+    `<label class="f"><span>Task name</span><input class="inp" id="cname" placeholder="Service the generator"></label>
+     <div class="grid2">
+       <label class="f"><span>How often?</span><select class="inp" id="cevery">
+         ${[[1,'Monthly'],[2,'Every 2 months'],[3,'Quarterly'],[4,'Every 4 months'],[6,'Twice a year'],[12,'Annually'],[24,'Every 2 years'],[36,'Every 3 years'],[60,'Every 5 years']]
+           .map(([v,l])=>`<option value="${v}"${v===12?' selected':''}>${l}</option>`).join('')}</select></label>
+       <label class="f"><span>Vendor trade</span><select class="inp" id="ctrade">
+         <option value="">I do this myself</option>
+         ${Object.entries(TRADES).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
+     </div>
+     ${dateField('First due date','id="cdue"',iso(addMonths(today(),1)),'',
+       [['Today',0],['In a week',7],['In a month',30],['In 3 months',91]])}
+     <label class="f"><span>Why it matters (optional)</span><input class="inp" id="cwhy" placeholder="Shows up in the task list as context"></label>`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveCustom">Add to schedule</button>`);
+}
+
+function completeModal(ruleId){
+  const p=activeProp();
+  const t=buildSchedule(p.id).find(x=>x.ruleId===ruleId);
+  if(!t) return;
+  const v=suggestVendors(t.trade);
+  openModal('Log completed work',
+    `<div style="font-weight:650;margin-bottom:3px">${esc(t.name)}</div>
+     <div style="font-size:12.5px;color:var(--tx3);margin-bottom:16px">${everyLabel(t.every)} &middot; next occurrence will be scheduled automatically</div>
+     <input type="hidden" id="crule" value="${ruleId}">
+     <div class="grid2">
+       ${dateField('Date completed','id="cdate"',iso(today()),'',
+         [['Today',0],['Yesterday',-1],['Last week',-7],['Last month',-30]])}
+       <label class="f"><span>Cost (optional)</span><input class="inp" type="number" id="ccost" placeholder="185"></label>
+     </div>
+     <label class="f"><span>Who did it?</span><select class="inp" id="cvendor">
+       <option value="">Myself</option>
+       ${S.vendors.map(x=>`<option value="${x.id}"${v[0]&&v[0].id===x.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+     <label class="f"><span>Notes</span><input class="inp" id="cnote" placeholder="Replaced capacitor, unit running clean"></label>`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveComplete">Mark complete</button>`);
+}
+
+function reqModal(id){
+  const r=S.requests.find(x=>x.id===id); if(!r) return;
+  const v=suggestVendors(r.trade);
+  openModal('Update request',
+    `<div style="font-weight:650;margin-bottom:3px">${esc(r.title)}</div>
+     <div style="font-size:12.5px;color:var(--tx3);margin-bottom:14px">From ${esc(r.guestName)} &middot; ${fmt(r.created)}</div>
+     <input type="hidden" id="rid" value="${id}">
+     <label class="f"><span>Status</span><select class="inp" id="rstatus">
+       ${[['new','New'],['ack','Acknowledged'],['scheduled','Vendor scheduled'],['closed','Resolved']]
+         .map(([k,l])=>`<option value="${k}"${r.status===k?' selected':''}>${l}</option>`).join('')}</select></label>
+     <label class="f"><span>Message back to the guest</span>
+       <textarea class="inp" id="rnote" placeholder="Plumber is booked for Thursday between 9 and 11.">${esc(r.note)}</textarea>
+       <div class="hint">This appears in the guest's portal view.</div></label>
+     ${v.length?`<div class="vendorChip" style="margin-top:0">&#9782; Suggested vendor: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email)}</div>`:''}`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveReq">Save</button>`);
+}
+
+/* Assign the walkthrough before it is created. A walkthrough with nobody
+   attached to it is the same stale-spreadsheet problem in a new shape. */
+function walkModal(){
+  const p=activeProp(); if(!p) return;
+  const n=buildChecklist(p).length;
+  // handyman and cleaning crews are who actually walk a property, so surface
+  // those first, but let the owner pick anyone or keep it themselves
+  const rank=v=>((v.trades||[]).includes('handyman')?0:(v.trades||[]).includes('cleaning')?1:2);
+  const sorted=[...S.vendors].sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name));
+  const gap=!S.vendors.some(v=>(v.trades||[]).includes('handyman'));
+  openModal('Start a walkthrough',
+    `<div style="font-size:13px;color:var(--tx2);margin-bottom:14px">
+       PropertyPulse will build a <b>${n} item</b> checklist for ${esc(p.nickname||p.address)}, covering only the
+       systems this property actually has. Whoever runs it marks each item and can attach a photo and a note.</div>
+     ${dateField('Date of the walkthrough','id="wdate"',iso(today()),'',
+       [['Today',0],['Tomorrow',1],['Next week',7]])}
+     <label class="f"><span>Who is running it?</span><select class="inp" id="wvendor">
+       <option value="">Myself</option>
+       ${sorted.map(v=>`<option value="${v.id}">${esc(v.name)}${(v.trades||[]).length?' &middot; '+esc((v.trades||[]).map(t=>TRADES[t]).join(', ')):''}</option>`).join('')}
+     </select>
+     <div class="hint">Assign a vendor and you get a link to send them. They fill in the same checklist without needing an account.</div></label>
+     ${gap?`<div class="nag" style="margin-top:4px">&#9432;
+       <div>You have no handyman or general inspector saved. That is usually who runs a walkthrough.</div>
+       ${findLocalBtn('handyman',p,'property walkthrough inspection')}</div>`:''}`,
+    `<button class="btn" data-a="closeModal">Cancel</button>
+     <button class="btn pri" data-a="saveWalk">Build the checklist</button>`);
+}
+
+/* Photos are the whole point of a documented walkthrough, so they need to be
+   viewable at more than thumbnail size. */
+function lightboxModal(src){
+  MR.innerHTML=`<div class="modalBg" data-a="modalBg" style="align-items:center">
+    <div style="max-width:min(92vw,900px);max-height:88vh;display:flex;flex-direction:column;gap:10px">
+      <img src="${src}" style="max-width:100%;max-height:80vh;border-radius:12px;border:1px solid var(--line2);object-fit:contain">
+      <button class="btn" data-a="closeModal" style="align-self:center">Close</button>
+    </div></div>`;
+}
+
+function digestPreview(){
+  const p=activeProp(); if(!p) return;
+  const sch=buildSchedule(p.id);
+  const od=sch.filter(x=>x.status==='overdue');
+  const soon=sch.filter(x=>x.status==='soon');
+  const line=t=>{const v=suggestVendors(t.trade);
+    return `<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:13px">
+      <b>${esc(t.name)}</b> <span style="color:var(--tx3)">&ndash; ${t.days<0?Math.abs(t.days)+' days overdue':'due '+fmt(t.due)}</span>
+      ${v.length?`<div style="font-size:11.5px;color:var(--tx3)">Call ${esc(v[0].name)} at ${esc(v[0].phone||v[0].email)}</div>`:''}</div>`};
+  openModal('Weekly digest preview',
+    `<div style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:18px">
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:3px">To: ${esc(S.owner.email||'you@example.com')}</div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:14px">
+        ${od.length?`${od.length} maintenance item${od.length===1?'':'s'} past due at ${esc(p.nickname||p.address)}`
+          :`${esc(p.nickname||p.address)}: all current, ${soon.length} coming up`}</div>
+      ${od.length?`<div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--bad);font-weight:700;margin-bottom:5px">Past due</div>${od.map(line).join('')}`:''}
+      ${soon.length?`<div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--warn);font-weight:700;margin:14px 0 5px">Next 30 days</div>${soon.map(line).join('')}`:''}
+      ${!od.length&&!soon.length?'<div style="font-size:13px;color:var(--tx2)">Nothing needs attention this week.</div>':''}
+      <div style="margin-top:16px;font-size:11.5px;color:var(--tx3)">Sent every Monday by PropertyPulse.</div>
+    </div>
+    <div class="hint" style="margin-top:12px">In the deployed build this is sent by a scheduled function. WhatsApp delivery of the same summary plugs into the identical payload.</div>`,
+    `<button class="btn pri" data-a="closeModal">Close</button>`);
+}
+
+/* ============================================================
+   14. ACTIONS
+   ============================================================ */
+const ACTIONS={
+  home(){
+    // clear the share hash too, otherwise a refresh drops them back into the
+    // guest or vendor view they just exited
+    if(location.hash) history.replaceState(null,'',location.pathname+location.search);
+    view=S.onboarded?'dash':'landing'; guestCtx=null; render();
+  },
+  demo(){ loadDemo(); toast('Demo property loaded','ok') },
+  exitDemo(){ if(confirm('Clear the demo data and start with an empty account?')){ S=blankState(); view='landing'; commit() } },
+  guestPortal(){ guestCtx=guestCtx||{name:'',email:'',title:'',body:'',trade:'',urgency:'normal',propId:S.activeProp};
+                 view='guest'; render() },
+  toggleMenu(){ document.getElementById('sb').classList.toggle('open') },
+  closeModal, modalBg(e,el){ if(e.target===el) closeModal() },
+
+  /* wizard */
+  startWizard(){ wizDraft=newDraft(); wizStep=0; view='wizard'; render() },
+  cancelWiz(){ wizDraft=null; view=S.onboarded?'props':'landing'; render() },
+  wizBack(){ if(wizStep>0){wizStep--; render()} },
+  wizNext(){
+    if(wizStep===0){
+      if(!wizDraft.address.trim()&&!wizDraft.nickname.trim()){ return toast('Give the property a nickname or address','bad') }
+      if(!wizDraft.nickname.trim()) wizDraft.nickname=wizDraft.address.split(',')[0];
+    }
+    wizStep++; render();
+  },
+  /* Skipping is a first-class choice, not a failure. Jump straight past the
+     details step; the missing fields get tracked and nagged about instead. */
+  wizSkipAppl(){ wizStep=GROUPS.length+2; render(); toast('Skipped. You will be reminded to finish this.') },
+  wizAddVendor(){ wizMode=true; vendorModal(null) },
+  wizDelVendor(e,el){ wizDraft.vendors.splice(+el.dataset.i,1); render() },
+  wizFinish(){
+    const d=wizDraft;
+    S.properties.push({id:d.id,nickname:d.nickname,address:d.address,type:d.type,beds:d.beds,
+      year:d.year,baseline:d.baseline,systems:d.systems,skipped:[],created:d.created});
+    // Create a record for every selected appliance even when the details were
+    // skipped, so the app can keep track of what is still missing.
+    d.systems.filter(k=>APPLIANCE_KEYS[k]).forEach(k=>{
+      const a=d.appliances.find(x=>x.key===k)||{};
+      S.appliances.push({id:uid(),propId:d.id,key:k,brand:a.brand||'',model:a.model||'',year:a.year||''});
+    });
+    d.vendors.forEach(v=>S.vendors.push({...v,id:uid()}));
+    S.activeProp=d.id; S.onboarded=true; wizDraft=null; wizStep=0; view='dash';
+    commit(); toast('Schedule built','ok');
+  },
+
+  /* nav + filters */
+  switchProp(e,el){ S.activeProp=el.value; commit() },
+  setActive(e,el){ S.activeProp=el.dataset.id; view='dash'; commit() },
+  schFilter(e,el){ schFilter=el.dataset.k; render() },
+
+  /* tasks */
+  complete(e,el){ completeModal(el.dataset.id) },
+  logDone(){ const p=activeProp(); const s=buildSchedule(p.id); if(s.length) completeModal(s[0].ruleId) },
+  saveComplete(){
+    const p=activeProp();
+    S.completions.push({id:uid(),propId:p.id,ruleId:val('crule'),date:val('cdate'),
+      cost:val('ccost'),vendorId:val('cvendor'),note:val('cnote')});
+    closeModal(); commit(); toast('Logged. Next occurrence scheduled.','ok');
+  },
+  snooze(e,el){
+    const p=activeProp(), id=el.dataset.id;
+    const t=buildSchedule(p.id).find(x=>x.ruleId===id); if(!t) return;
+    // record a pseudo-completion 30 days before the new target so the next due lands +30d
+    S.completions.push({id:uid(),propId:p.id,ruleId:id,snoozed:true,
+      date:iso(addMonths(new Date(today().getTime()+30*MS_DAY),-t.every)),note:'Snoozed'});
+    commit(); toast('Pushed out 30 days');
+  },
+  addCustom(){ customModal() },
+  saveCustom(){
+    const name=val('cname'); if(!name) return toast('Name the task','bad');
+    const every=+val('cevery');
+    const p=activeProp();
+    const rid='c_'+uid();
+    S.custom.push({id:rid,propId:p.id,n:name,every,trade:val('ctrade'),why:val('cwhy')});
+    // anchor so the first due date is what the user picked
+    S.completions.push({id:uid(),propId:p.id,ruleId:rid,date:iso(addMonths(pd(val('cdue')),-every)),note:'Initial'});
+    closeModal(); commit(); toast('Added to schedule','ok');
+  },
+
+  /* walkthroughs */
+  newWalk(){ walkModal() },
+  saveWalk(){
+    const p=activeProp(); if(!p) return;
+    const items=buildChecklist(p);
+    if(!items.length) return toast('This property has no checklist items yet','bad');
+    const w={id:uid(),propId:p.id,vendorId:val('wvendor'),started:val('wdate')||iso(today()),
+             completed:'',status:'open',items};
+    S.walkthroughs.unshift(w);
+    S.activeWalk=w.id; view='walkdetail';
+    closeModal(); commit(); toast(items.length+' item checklist ready','ok');
+  },
+  openWalk(e,el){ S.activeWalk=el.dataset.id; view='walkdetail'; commit() },
+  backToWalks(){ view='walk'; commit() },
+  wtSet(e,el){
+    const w=S.walkthroughs.find(x=>x.id===S.activeWalk); if(!w) return;
+    const i=w.items.find(x=>x.id===el.dataset.id); if(!i) return;
+    // clicking the active state again clears it, so a misclick is recoverable
+    i.status = i.status===el.dataset.v ? '' : el.dataset.v;
+    commit();
+  },
+  wtDelPhoto(e,el){
+    const w=S.walkthroughs.find(x=>x.id===S.activeWalk); if(!w) return;
+    const i=w.items.find(x=>x.id===el.dataset.id); if(!i) return;
+    i.photo=''; commit();
+  },
+  lightbox(e,el){ lightboxModal(el.dataset.src) },
+  finishWalk(e,el){
+    const w=S.walkthroughs.find(x=>x.id===el.dataset.id); if(!w) return;
+    const pr=wtProgress(w);
+    if(pr.done<pr.total&&!confirm((pr.total-pr.done)+' items are still unchecked. Complete the walkthrough anyway?')) return;
+    w.status='complete'; w.completed=iso(today());
+    const fl=wtFlags(w);
+    // A finished walkthrough is real evidence the inspection happened, so log it
+    // against the schedule. Otherwise the app would still nag for a walkthrough
+    // the owner just spent an hour doing.
+    S.completions.push({id:uid(),propId:w.propId,ruleId:'walkthru',date:w.completed,cost:'',
+      note:fl.length?fl.length+' items flagged for attention':'No issues found'});
+    commit();
+    toast(fl.length?`Complete. ${fl.length} item${fl.length===1?'':'s'} flagged.`:'Complete. Nothing flagged.','ok');
+  },
+  delWalk(e,el){
+    if(!confirm('Delete this walkthrough and its photos and notes?')) return;
+    S.walkthroughs=S.walkthroughs.filter(w=>w.id!==el.dataset.id);
+    if(S.activeWalk===el.dataset.id){ S.activeWalk=null; view='walk' }
+    commit();
+  },
+  copyWalkLink(e,el){
+    const url=location.origin+location.pathname+'#walk/'+el.dataset.id;
+    navigator.clipboard.writeText(url).then(()=>toast('Vendor link copied','ok'),()=>toast('Copy failed','bad'));
+  },
+
+  /* vendors */
+  addVendor(){ wizMode=false; vendorModal(null) },
+  editVendor(e,el){ wizMode=false; vendorModal(S.vendors.find(v=>v.id===el.dataset.id)) },
+  delVendor(e,el){ S.vendors=S.vendors.filter(v=>v.id!==el.dataset.id); commit() },
+  saveVendor(e,el){
+    const name=val('vname'); if(!name) return toast('Vendor needs a name','bad');
+    const trades=[...MR.querySelectorAll('[data-vtrade].on')].map(b=>b.dataset.vtrade);
+    if(!trades.length) return toast('Pick at least one trade','bad');
+    const obj={id:val('vid'),name,trades,location:val('vloc'),phone:val('vphone'),email:val('vemail'),notes:val('vnotes')};
+    if(el.dataset.wiz==='1'){ wizDraft.vendors.push(obj); closeModal(); render(); }
+    else{
+      const i=S.vendors.findIndex(v=>v.id===obj.id);
+      if(i>=0) S.vendors[i]=obj; else S.vendors.push(obj);
+      closeModal(); commit();
+    }
+    toast('Vendor saved','ok');
+  },
+
+  /* appliances */
+  addAppl(){ applianceModal(null) },
+  editAppl(e,el){ applianceModal(S.appliances.find(a=>a.id===el.dataset.id)) },
+  saveAppl(){
+    const p=activeProp();
+    const obj={id:val('aid'),propId:p.id,key:val('akey'),brand:val('abrand'),model:val('amodel'),year:val('ayear')};
+    const i=S.appliances.findIndex(a=>a.id===obj.id);
+    if(i>=0) S.appliances[i]=obj; else S.appliances.push(obj);
+    closeModal(); commit(); toast('Saved','ok');
+  },
+
+  /* properties */
+  delProp(e,el){
+    const id=el.dataset.id;
+    if(!confirm('Delete this property and all its records?')) return;
+    S.properties=S.properties.filter(p=>p.id!==id);
+    S.appliances=S.appliances.filter(a=>a.propId!==id);
+    S.completions=S.completions.filter(c=>c.propId!==id);
+    S.requests=S.requests.filter(r=>r.propId!==id);
+    S.custom=S.custom.filter(c=>c.propId!==id);
+    S.walkthroughs=S.walkthroughs.filter(w=>w.propId!==id);
+    if(S.activeProp===id) S.activeProp=S.properties[0]?S.properties[0].id:null;
+    if(!S.properties.length){ S.onboarded=false; view='landing' }
+    commit();
+  },
+
+  /* requests */
+  submitReq(){
+    const g=guestCtx;
+    if(!g.name||!g.email) return toast('Name and email are required','bad');
+    if(!g.title) return toast('Describe the issue','bad');
+    const propId=g.propId||S.activeProp||(S.properties[0]&&S.properties[0].id);
+    if(!propId) return toast('No property is set up yet','bad');
+    S.requests.unshift({id:uid(),propId,guestName:g.name,guestEmail:g.email,title:g.title,
+      body:g.body,trade:g.trade,urgency:g.urgency||'normal',status:'new',note:'',created:iso(today())});
+    guestCtx={...g,title:'',body:'',trade:'',urgency:'normal'};
+    commit(); toast('Sent. The owner has been notified.','ok');
+  },
+  advReq(e,el){ reqModal(el.dataset.id) },
+  saveReq(){
+    const r=S.requests.find(x=>x.id===val('rid'));
+    r.status=val('rstatus'); r.note=val('rnote');
+    closeModal(); commit(); toast('Guest notified','ok');
+  },
+  delReq(e,el){ S.requests=S.requests.filter(r=>r.id!==el.dataset.id); commit() },
+
+  /* settings */
+  toggleDigest(){ S.prefs.emailDigest=!S.prefs.emailDigest; commit() },
+  preview(){ digestPreview() },
+  copyLink(){ const i=document.getElementById('portalLink'); i.select();
+    navigator.clipboard.writeText(i.value).then(()=>toast('Link copied','ok'),()=>toast('Copy failed','bad')) },
+  wipe(){ if(confirm('Erase all PropertyPulse data in this browser?')){ DB.clear(); S=blankState(); view='landing'; render() } },
+  exportJson(){ dl('propertypulse-data.json',JSON.stringify(S,null,2),'application/json') },
+  exportCsv(){
+    const p=activeProp(); if(!p) return;
+    const rows=[['Task','Frequency','Due date','Status','Days','Last done','Trade','Suggested vendor']];
+    buildSchedule(p.id).forEach(t=>{const v=suggestVendors(t.trade);
+      rows.push([t.name,everyLabel(t.every),fmt(t.due),t.status,t.days,t.lastDone?fmt(t.lastDone):'never',
+                 TRADES[t.trade]||'self',v[0]?v[0].name:''])});
+    dl('maintenance-schedule.csv',rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n'),'text/csv');
+  },
+};
+
+function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
+function dl(name,data,type){
+  const b=new Blob([data],{type}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u);
+  toast('Downloaded '+name,'ok');
+}
+
+/* ============================================================
+   15. EVENT BINDING
+   ============================================================ */
+function bind(){
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{
+    view=b.dataset.nav; const sb=document.getElementById('sb'); if(sb)sb.classList.remove('open'); render();
+  });
+  document.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.opt;
+    const i=wizDraft.systems.indexOf(k);
+    if(i>=0) wizDraft.systems.splice(i,1); else wizDraft.systems.push(k);
+    render();
+  });
+  document.querySelectorAll('[data-d]').forEach(el=>{
+    el.oninput=()=>{ wizDraft[el.dataset.d]=el.value };
+    el.onchange=()=>{ wizDraft[el.dataset.d]=el.value };
+  });
+  document.querySelectorAll('[data-ap]').forEach(el=>{
+    el.oninput=()=>{
+      const k=el.dataset.ap;
+      let a=wizDraft.appliances.find(x=>x.key===k);
+      if(!a){ a={key:k,brand:'',model:'',year:''}; wizDraft.appliances.push(a) }
+      a[el.dataset.fld]=el.value;
+    };
+  });
+  document.querySelectorAll('[data-g]').forEach(el=>{
+    const h=()=>{ guestCtx[el.dataset.g]=el.value };
+    el.oninput=h; el.onchange=h;
+  });
+  document.querySelectorAll('[data-s]').forEach(el=>{
+    el.onchange=()=>{ if(el.dataset.s==='ownerEmail'){ S.owner.email=el.value; DB.save(S) } };
+  });
+  /* Walkthrough notes save on the fly. Re-rendering on every keystroke would
+     steal focus mid-sentence, so write straight to state and save without
+     touching the DOM. The value is already correct on the next render. */
+  document.querySelectorAll('[data-wtnote]').forEach(el=>{
+    el.oninput=()=>{
+      const w=S.walkthroughs.find(x=>x.id===S.activeWalk); if(!w) return;
+      const i=w.items.find(x=>x.id===el.dataset.wtnote); if(!i) return;
+      i.note=el.value; DB.save(S);
+    };
+  });
+  document.querySelectorAll('[data-wtphoto]').forEach(el=>{
+    el.onchange=async()=>{
+      const f=el.files&&el.files[0]; if(!f) return;
+      const w=S.walkthroughs.find(x=>x.id===S.activeWalk); if(!w) return;
+      const i=w.items.find(x=>x.id===el.dataset.wtphoto); if(!i) return;
+      try{
+        i.photo=await compressImage(f);
+        // an unchecked item with a photo attached is almost always a problem
+        if(!i.status) i.status='attention';
+        commit(); toast('Photo attached','ok');
+      }catch(err){
+        toast('Could not read that image','bad');
+      }
+    };
+  });
+  bindDates(document);
+  bindActions(document);
+}
+function bindActions(scope){
+  scope.querySelectorAll('[data-a]').forEach(el=>{
+    const fn=ACTIONS[el.dataset.a]; if(!fn) return;
+    if(el.tagName==='SELECT') el.onchange=e=>fn(e,el);
+    else el.onclick=e=>fn(e,el);
+  });
+}
+const mo=new MutationObserver(()=>{ bindActions(MR); bindDates(MR) });
+mo.observe(MR,{childList:true});
+
+/* ============================================================
+   16. DEMO DATA
+   ============================================================ */
+function loadDemo(){
+  const pid=uid();
+  const back=n=>iso(addMonths(today(),-n));
+  S=blankState();
+  S.demo=true; S.onboarded=true; S.activeProp=pid;
+  S.owner={name:'Luis Noboa Perez',email:'owner@example.com'};
+  S.properties=[{
+    id:pid,nickname:'Rosewood Lane',address:'1247 Rosewood Ln, Austin, TX 78704',
+    type:'Short-term rental',beds:'3',year:'1998',
+    baseline:back(14),created:back(14),
+    // 'panel' and 'driveway' are deliberate: this owner has no electrician or
+    // paving vendor saved, which is what the find-a-local search is for. A demo
+    // where every trade is already covered hides the feature.
+    systems:['furnace','centralac','tankwh','gutters','roof','chimney','deck','windows','foundation',
+             'lawn','irrig','trees','fridge','dishwash','washer','dryer','range','hood','disposal',
+             'detectors','extinguish','garage','pest','panel','driveway'],
+    skipped:[],
+  }];
+  S.vendors=[
+    {id:uid(),name:'Hill Country HVAC',trades:['hvac'],location:'Austin, TX',phone:'(512) 555-0184',email:'service@hillcountryhvac.com',notes:'Ask for Dave. Same-week service in shoulder season.'},
+    {id:uid(),name:'Barton Creek Plumbing',trades:['plumbing'],location:'Austin, TX',phone:'(512) 555-0221',email:'dispatch@bcplumbing.com',notes:'24hr emergency line.'},
+    {id:uid(),name:'Lone Star Roof & Gutter',trades:['roofing','chimney'],location:'Round Rock, TX',phone:'(512) 555-0367',email:'info@lonestarroof.com',notes:''},
+    {id:uid(),name:'Verde Lawn & Irrigation',trades:['landscaping'],location:'Austin, TX',phone:'(512) 555-0412',email:'schedule@verdelawn.com',notes:'Monthly contract, first Tuesday.'},
+    {id:uid(),name:'ShieldPro Pest',trades:['pest'],location:'Austin, TX',phone:'(512) 555-0598',email:'book@shieldpropest.com',notes:'Quarterly plan paid annually.'},
+    {id:uid(),name:'Ruiz Handyman Services',trades:['handyman','painting'],location:'Austin, TX',phone:'(512) 555-0733',email:'ruiz.handyman@example.com',notes:'Good for punch lists between guests.'},
+    {id:uid(),name:'FreshStart Turnover Cleaning',trades:['cleaning'],location:'Austin, TX',phone:'(512) 555-0810',email:'ops@freshstartclean.com',notes:'Also does dryer vents.'},
+  ];
+  S.appliances=[
+    {id:uid(),propId:pid,key:'furnace',  brand:'Carrier',   model:'59SC5A080E17',  year:'2011'},
+    {id:uid(),propId:pid,key:'centralac',brand:'Carrier',   model:'24ACC636A003',  year:'2011'},
+    {id:uid(),propId:pid,key:'tankwh',   brand:'Rheem',     model:'XG50T06EC38U0', year:'2014'},
+    {id:uid(),propId:pid,key:'fridge',   brand:'Whirlpool', model:'WRF535SWHZ',    year:'2021'},
+    {id:uid(),propId:pid,key:'dishwash', brand:'Bosch',     model:'SHXM63WS5N',    year:'2020'},
+    {id:uid(),propId:pid,key:'washer',   brand:'LG',        model:'WM4000HWA',     year:'2019'},
+    {id:uid(),propId:pid,key:'dryer',    brand:'LG',        model:'DLE4000W',      year:'2019'},
+    {id:uid(),propId:pid,key:'range',    brand:'GE',        model:'JGB735SPSS',    year:'2020'},
+    {id:uid(),propId:pid,key:'garage',   brand:'Chamberlain',model:'B4643T',       year:'2018'},
+  ];
+  // realistic completion history: some current, some badly lapsed
+  S.completions=[
+    {id:uid(),propId:pid,ruleId:'filter',    date:back(5),  cost:'32',  note:'MERV 11 two-pack'},
+    {id:uid(),propId:pid,ruleId:'hvacspring',date:back(16), cost:'145', note:'Coil clean, refrigerant fine'},
+    {id:uid(),propId:pid,ruleId:'hvacfall',  date:back(21), cost:'160', note:''},
+    {id:uid(),propId:pid,ruleId:'whflush',   date:back(26), cost:'0',   note:'Did it myself, heavy sediment'},
+    {id:uid(),propId:pid,ruleId:'dryervent', date:back(19), cost:'110', note:'Lint buildup was significant'},
+    {id:uid(),propId:pid,ruleId:'gutterfall',date:back(9),  cost:'175', note:''},
+    {id:uid(),propId:pid,ruleId:'pestquart', date:back(2),  cost:'95',  note:'Quarterly barrier'},
+    {id:uid(),propId:pid,ruleId:'mow',       date:back(1),  cost:'140', note:''},
+    {id:uid(),propId:pid,ruleId:'detector',  date:back(11), cost:'24',  note:'All 6 units tested'},
+    {id:uid(),propId:pid,ruleId:'roofinsp',  date:back(13), cost:'0',   note:'Two lifted shingles, patched'},
+    {id:uid(),propId:pid,ruleId:'dwfilter',  date:back(4),  cost:'0',   note:''},
+    {id:uid(),propId:pid,ruleId:'fridgecoil',date:back(8),  cost:'0',   note:''},
+  ];
+  S.requests=[
+    {id:uid(),propId:pid,guestName:'Jordan Reyes',guestEmail:'jordan.reyes@example.com',
+     title:'Upstairs A/C not keeping up',body:'Thermostat is set to 71 but the upstairs rooms are sitting around 78 all afternoon. Downstairs feels fine.',
+     trade:'hvac',urgency:'high',status:'ack',note:'Thanks for flagging. Hill Country HVAC is coming Thursday between 1 and 3pm.',created:back(0.2)},
+    {id:uid(),propId:pid,guestName:'Priya Anand',guestEmail:'p.anand@example.com',
+     title:'Kitchen sink draining slowly',body:'Water pools for about a minute after running the tap. Tried a plunger, no change.',
+     trade:'plumbing',urgency:'normal',status:'new',note:'',created:back(0.1)},
+    {id:uid(),propId:pid,guestName:'Marcus Webb',guestEmail:'mwebb@example.com',
+     title:'Garage door remote not working',body:'Keypad on the outside works but the handheld remote does nothing. Probably just a battery.',
+     trade:'handyman',urgency:'low',status:'closed',note:'Replaced the remote battery, working now. Spare batteries are in the kitchen drawer.',created:back(1.5)},
+  ];
+  // One finished walkthrough with real findings, one in progress. Photos are
+  // omitted from the seed on purpose: base64 images would bloat the file and
+  // the empty state exercises the same code path.
+  const handy=S.vendors.find(v=>(v.trades||[]).includes('handyman'));
+  const doneItems=buildChecklist(S.properties[0]);
+  const findings={
+    'Gutters and downspouts':'Downspout at the northeast corner is separated at the elbow, water is dumping against the foundation.',
+    'Water heater and relief valve':'Light rust ring at the base of the tank. Unit is a 2014, worth budgeting for a replacement.',
+    'Windows, caulk and weather seals':'Caulk on the two west-facing windows is cracked and pulling away.',
+  };
+  // Match on a substring rather than the exact label, so editing the checklist
+  // wording later does not silently strip the demo of its findings.
+  doneItems.forEach((i,idx)=>{
+    const hit=Object.keys(findings).find(k=>i.label.toLowerCase().startsWith(k.slice(0,14).toLowerCase()));
+    if(hit){ i.status='attention'; i.note=findings[hit] }
+    else { i.status = (idx>0&&idx%17===0) ? 'na' : 'ok' }
+  });
+  const openItems=buildChecklist(S.properties[0]);
+  openItems.forEach((i,idx)=>{ if(idx<Math.floor(openItems.length*0.4)) i.status='ok' });
+  // flag the item the note actually describes, not whatever lands at a fixed index
+  const wthr=openItems.find(i=>/window/i.test(i.label))||openItems[2];
+  wthr.status='attention';
+  wthr.note='Weatherstripping is compressed on the two west-facing windows, daylight visible at the bottom corner.';
+  S.walkthroughs=[
+    {id:uid(),propId:pid,vendorId:handy?handy.id:'',started:back(0.4),completed:'',status:'open',items:openItems},
+    {id:uid(),propId:pid,vendorId:handy?handy.id:'',started:back(6),completed:back(6),status:'complete',items:doneItems},
+  ];
+  S.completions.push({id:uid(),propId:pid,ruleId:'walkthru',date:back(6),cost:'0',note:'3 items flagged for attention'});
+  S.prefs.emailDigest=true;
+  view='dash'; commit();
+}
+
+/* ============================================================
+   17. BOOT
+   ============================================================ */
+/* Shared links have to work whether the app is cold or already open. Routing on
+   hashchange as well as on load means a vendor can paste the link into a tab
+   that is already running and land in the right place. */
+function routeHash(){
+  const h=location.hash;
+  if(h.startsWith('#guest')){
+    const pid=h.split('/')[1];
+    if(!S.onboarded) loadDemo();
+    guestCtx={name:'',email:'',title:'',body:'',trade:'',urgency:'normal',propId:pid||S.activeProp};
+    view='guest'; return true;
+  }
+  if(h.startsWith('#walk/')){
+    // Vendor-facing checklist: no sidebar, no account, straight to the work.
+    // A bad id is passed through unchanged so the page can say "not found"
+    // rather than quietly handing this vendor someone else's walkthrough.
+    if(!S.onboarded) loadDemo();
+    S.activeWalk=h.split('/')[1]||null;
+    view='vendorwalk'; return true;
+  }
+  return false;
+}
+routeHash();
+window.addEventListener('hashchange',()=>{ if(routeHash()) render() });
+render();
+</script>
+</body>
+</html>
