@@ -34,17 +34,22 @@ All SQL now lives in the `sql/` folder. `001_schema.sql` and `002_rls.sql` are a
 - [x] **1.3** Investigated the count mismatch on `profiles`. Three policies, all testing `(auth.uid() = id)`, no leak — two were redundant additions from the dashboard's policy wizard.
 - [ ] **1.4 (Y)** Run `sql/003_policy_cleanup.sql`. Drops the two redundant profile policies and adds `custom_rules.archived`.
 - [ ] **1.5 (Y)** Run query 1 in `sql/checks.sql` again. Expect `requests` = 3 and every other table = 1. That closes old checklist step 1.8.
-- [ ] **1.6 (Y)** Commit and push the new `sql/` folder in GitHub Desktop.
+- [x] **1.6** `sql/` folder pushed (commit `ac9af00`).
 
 Save `sql/checks.sql` as a named snippet in the Supabase SQL editor rather than opening a new query tab each time. Highlight one query and press Cmd+Enter to run just that one.
 
 ## Step 2 — logins (1 hr)
 
-- [ ] **2.1 (Y)** In Supabase, go to Settings → API and copy the **Project URL** and the **anon public** key. Paste both to me. Both are safe to publish; the one to never share is `service_role`.
-- [ ] **2.2 (me)** Add the Supabase library, a login screen, and a trigger on `auth.users` that creates the `profiles` row automatically at signup.
-- [ ] **2.3 (Y)** Review the diff in GitHub Desktop, commit, push. Wait for Netlify to redeploy.
-- [ ] **2.4 (Y)** Sign up with your real email. Confirm you land in the app.
-- [ ] **2.5 (Y)** **The security proof.** Open a private window, sign up with a throwaway email, and confirm that account sees none of your data. This is the test that proves Step 1 worked. Nothing else proves it.
+- [x] **2.1** Project URL `https://wcmnxtqjoretnboplcos.supabase.co` and the anon key are in `index.html`. Both safe to publish; the one to never share is `service_role`.
+- [x] **2.2 (me)** Supabase library added, sign in / create account screen built, app views gated behind a session, sign out in the sidebar.
+- [ ] **2.3 (Y)** Run `sql/004_profile_trigger.sql` in Supabase. Creates the `profiles` row automatically at signup. **Do this before 2.5**, otherwise the new account has no profile row and every insert later fails.
+- [ ] **2.4 (Y)** Supabase → Authentication → Sign In / Providers. If **Confirm email** is on, either turn it off for now or be ready to click a link in your inbox. Either is fine; you just need to know which.
+- [ ] **2.5 (Y)** Review the diff in GitHub Desktop, commit, push. Wait for Netlify to redeploy.
+- [ ] **2.6 (Y)** Create an account with your real email. Confirm you land in the app.
+- [ ] **2.7 (Y)** Run queries 4 and 5 in `sql/checks.sql`. Query 4 should return **zero rows** (every account has a profile), query 5 should return **one row** (the trigger is attached).
+- [ ] **2.8 (Y)** In a private window, create a second account with a throwaway email. It should sign in and reach an empty setup wizard.
+
+**What Step 2 does not prove.** Your properties still load from this browser's storage, not from the database — Step 2 added the account, not the data move. So 2.8 tests that signup works, and nothing more. If the second account somehow shows your property, that is localStorage being shared, not a security hole. The real isolation test is Step 3.5, after the data actually lives in Supabase.
 
 ## Step 3 — wire the core loop to the database (2 sessions)
 
@@ -54,6 +59,7 @@ Covers properties, appliances, vendors, completions and custom rules — the mai
 - [ ] **3.2 (me)** Convert the 25 `commit()` call sites from "save everything" to targeted writes.
 - [ ] **3.3 (Y)** Review the diff, commit, push.
 - [ ] **3.4 (Y)** Add a property. Refresh the page. If it's still there, the database is live.
+- [ ] **3.5 (Y)** **The security proof.** Sign in as the throwaway account from 2.8, in a private window. It must see none of your properties. This is the test that proves Step 1's RLS worked — nothing before this point proves it, because until now the data never left the browser.
 
 ## Step 4 — the phone test (30 min)
 

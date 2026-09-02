@@ -1,0 +1,10 @@
+# macOS writes this into every folder you open in Finder. It records icon
+# positions, nothing about the project, and it changes constantly — which makes
+# it show up as a pending change in GitHub Desktop forever.
+.DS_Store
+
+# Editor and OS noise
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -7,6 +7,7 @@ Every statement that has changed the PropertyPulse database, in the order it was
 | `001_schema.sql` | The nine tables | applied |
 | `002_rls.sql` | Row level security, all nine tables | applied |
 | `003_policy_cleanup.sql` | Drops two redundant profile policies, adds `custom_rules.archived` | pending |
+| `004_profile_trigger.sql` | Creates the `profiles` row automatically at signup | pending |
 | `checks.sql` | Read-only verification queries. Not a migration. | run any time |
 
 ## The rule

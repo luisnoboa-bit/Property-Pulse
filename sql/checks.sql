@@ -40,3 +40,20 @@ union all select 'vendors',     count(*) from vendors
 union all select 'custom_rules',count(*) from custom_rules
 union all select 'requests',    count(*) from requests
 union all select 'walkthroughs',count(*) from walkthroughs;
+
+
+-- 4. Does every account have a profiles row?
+-- Expect zero rows. Anything listed here signed up before 004 ran, or the
+-- trigger is not firing. Every other table hangs off profiles.id, so an account
+-- missing from here can log in and then fail on its first insert.
+select u.id, u.email, u.created_at
+from auth.users u
+left join profiles p on p.id = u.id
+where p.id is null;
+
+
+-- 5. Is the signup trigger actually attached?
+-- Expect one row: on_auth_user_created on users.
+select tgname, tgrelid::regclass as on_table, tgenabled
+from pg_trigger
+where tgname = 'on_auth_user_created';

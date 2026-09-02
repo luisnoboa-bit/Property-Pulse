@@ -340,6 +340,11 @@ input[type="date"].inp:hover::-webkit-calendar-picker-indicator{opacity:1}
 <div id="root"></div>
 <div id="toasts"></div>
 <div id="modalRoot"></div>
+
+<!-- Supabase client library. Loaded from a CDN rather than installed, so this
+     stays a single file with no build step. It defines window.supabase. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
 <script>
 /* ============================================================
    PropertyPulse (prototype build)
@@ -512,6 +517,37 @@ const DB={
   },
   clear(){ localStorage.removeItem(KEY) },
 };
+
+/* ---------- 4b. ACCOUNTS ----------------------------------
+   Supabase handles the account; the data still lives in
+   localStorage until step 3 moves it. Keeping those two moves
+   apart means if login breaks, the app's data is untouched.
+
+   Both values below are safe to publish. The anon key is
+   designed to sit in browser code — it identifies the project,
+   it does not grant access. What actually protects the data is
+   the row level security policies in sql/002_rls.sql, which is
+   why those had to be right before this step could happen.
+   The key that must never appear here is `service_role`.
+----------------------------------------------------------- */
+const SUPABASE_URL='https://wcmnxtqjoretnboplcos.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbW54dHFqb3JldG5ib3BsY29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNjkwNzMsImV4cCI6MjEwMjg0NTA3M30.bq3SHMd3kmWCFLM2_gPoVQlvmsH86hYWdbJUeAnixLY';
+
+const supa = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+/* Who is signed in right now. null means nobody. Supabase keeps the token in
+   localStorage itself and refreshes it, so a returning visitor is already
+   signed in before the first render. */
+let session=null;
+/* Until Supabase has answered, "no session" and "don't know yet" look the same.
+   Without this flag the first paint shows the login screen to someone who is
+   already signed in, then swaps it out — a flash that looks like a bug. */
+let authReady=false;
+let authMode='in';   // 'in' = sign in, 'up' = create account
+let authBusy=false;
+let authMsg='';
 
 function blankState(){
   return {
@@ -891,12 +927,62 @@ function everyLabel(m){
 const R=document.getElementById('root');
 
 function render(){
+  /* Public views. A guest reporting a problem and a vendor filling in a
+     walkthrough reach the app by link and must never hit a login wall. */
   if(view==='landing'){ R.innerHTML=Landing(); return bind(); }
-  if(view==='wizard'){ R.innerHTML=Wizard(); return bind(); }
+  if(view==='auth'){ R.innerHTML=Auth(); return bind(); }
   if(view==='guest'){ R.innerHTML=GuestPortal(); return bind(); }
   if(view==='vendorwalk'){ R.innerHTML=VendorWalk(); return bind(); }
+
+  /* Everything past this line is the owner's own account. */
+  if(!session){
+    if(!authReady){ R.innerHTML=`<div class="land"><div style="margin:auto;color:var(--tx3);font-size:13px">Loading&hellip;</div></div>`; return }
+    view='auth'; R.innerHTML=Auth(); return bind();
+  }
+
+  if(view==='wizard'){ R.innerHTML=Wizard(); return bind(); }
   R.innerHTML=Shell();
   bind();
+}
+
+/* ---------- sign in / create account ---------------------- */
+function Auth(){
+  const up=authMode==='up';
+  const msg=authMsg
+    ? `<div class="hint" style="margin:-4px 0 12px;color:${/^Check|^Account/.test(authMsg)?'var(--ok)':'var(--bad)'}">${esc(authMsg)}</div>`
+    : '';
+  return `<div class="land">
+  <div class="landNav">
+    <div class="brandMark">P</div>
+    <div><div class="brandName">PropertyPulse</div></div>
+    <div style="flex:1"></div>
+    <button class="btn sm gho" data-a="home">&larr; Back</button>
+  </div>
+  <div style="width:100%;max-width:380px;padding:40px 24px 24px">
+    <div class="card">
+      <div class="cardHd" style="display:block">
+        <div class="cardTitle" style="font-size:18px">${up?'Create your account':'Sign in'}</div>
+        <div class="cardSub">${up?'Your properties are private to this account.':'Welcome back.'}</div>
+      </div>
+      ${msg}
+      <form id="authForm" autocomplete="on">
+        <label class="f"><span>Email</span>
+          <input class="inp" type="email" id="authEmail" autocomplete="username" required></label>
+        <label class="f"><span>Password</span>
+          <input class="inp" type="password" id="authPass"
+                 autocomplete="${up?'new-password':'current-password'}"
+                 minlength="6" required>
+          ${up?'<div class="hint">At least 6 characters.</div>':''}</label>
+        <button class="btn pri" type="submit" style="width:100%;margin-top:6px"${authBusy?' disabled':''}>
+          ${authBusy?'Working&hellip;':(up?'Create account':'Sign in')}</button>
+      </form>
+      <div class="sideFoot" style="justify-content:center;font-size:12.5px;color:var(--tx3)">
+        ${up?'Already have an account?':'No account yet?'}
+        <button class="btn sm gho" data-a="authSwitch">${up?'Sign in':'Create one'}</button>
+      </div>
+    </div>
+  </div>
+</div>`;
 }
 
 /* ---------- landing / portfolio front door ---------------- */
@@ -912,10 +998,10 @@ function Landing(){
     <h1 class="landH1">Stop tracking property maintenance in a <em>spreadsheet you never update</em>.</h1>
     <p class="landP">PropertyPulse asks what your property actually has, builds the maintenance schedule for you, tells you what is past due, and suggests which vendor to call. Guests report issues straight into the same queue.</p>
     <div class="landCta">
-      <button class="btn pri lg" data-a="demo">View live demo</button>
-      <button class="btn lg" data-a="startWizard">Set up my property</button>
+      <button class="btn pri lg" data-a="goAuth" data-mode="up">Create an account</button>
+      <button class="btn lg" data-a="goAuth" data-mode="in">Sign in</button>
     </div>
-    <p style="font-size:12px;color:var(--tx3);margin-top:14px">Demo loads a fully populated sample property. No signup.</p>
+    <p style="font-size:12px;color:var(--tx3);margin-top:14px">Trying it out? Sign in with the demo account in the README.</p>
   </div>
   <div class="landFeat">
     <div class="feat"><div class="featIco">&#9881;</div><div class="featT">Schedule builds itself</div><div class="featP">Answer a short setup questionnaire and the app generates every recurring task the property needs, seasonally timed. A condo never sees gutter tasks.</div></div>
@@ -980,7 +1066,8 @@ function Shell(){
      <nav class="nav"><div class="navLabel">Manage</div>${nav}</nav>
      <div class="sideFoot">
        <button class="btn sm" style="width:100%;margin-bottom:7px" data-a="guestPortal">Open guest portal</button>
-       <button class="btn sm gho" style="width:100%" data-a="home">&larr; Back to landing</button>
+       <div style="font-size:11.5px;color:var(--tx3);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis">${session&&session.user?esc(session.user.email):''}</div>
+       <button class="btn sm gho" style="width:100%" data-a="signOut">Sign out</button>
      </div>
    </aside>
    <div class="main">
@@ -1863,10 +1950,20 @@ const ACTIONS={
     // clear the share hash too, otherwise a refresh drops them back into the
     // guest or vendor view they just exited
     if(location.hash) history.replaceState(null,'',location.pathname+location.search);
-    view=S.onboarded?'dash':'landing'; guestCtx=null; render();
+    view=(session&&S.onboarded)?'dash':'landing'; guestCtx=null; render();
   },
+
+  /* accounts */
+  goAuth(e,el){ authMode=el.dataset.mode||'in'; authMsg=''; view='auth'; render() },
+  authSwitch(){ authMode=authMode==='up'?'in':'up'; authMsg=''; render() },
+  async signOut(){
+    await supa.auth.signOut();
+    session=null; view='landing'; render();
+    toast('Signed out','ok');
+  },
+
   demo(){ loadDemo(); toast('Demo property loaded','ok') },
-  exitDemo(){ if(confirm('Clear the demo data and start with an empty account?')){ S=blankState(); view='landing'; commit() } },
+  exitDemo(){ if(confirm('Clear the demo data and start with an empty account?')){ S=blankState(); wizDraft=newDraft(); wizStep=0; view='wizard'; commit() } },
   guestPortal(){ guestCtx=guestCtx||{name:'',email:'',title:'',body:'',trade:'',urgency:'normal',propId:S.activeProp};
                  view='guest'; render() },
   toggleMenu(){ document.getElementById('sb').classList.toggle('open') },
@@ -2134,8 +2231,61 @@ function bind(){
       }
     };
   });
+  const af=document.getElementById('authForm');
+  if(af) af.onsubmit=submitAuth;
   bindDates(document);
   bindActions(document);
+}
+
+/* Sign in and sign up are the same form with one branch, because everything
+   around them — reading the fields, the busy state, the error handling — is
+   identical, and two copies would drift apart. */
+async function submitAuth(e){
+  e.preventDefault();
+  if(authBusy) return;
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPass').value;
+  authBusy=true; authMsg=''; render();
+
+  try{
+    if(authMode==='up'){
+      const {data,error}=await supa.auth.signUp({email,password});
+      if(error) throw error;
+      /* If the project requires email confirmation, signUp returns a user but
+         no session. Saying "check your email" only when that is actually true
+         avoids sending someone to an inbox that will stay empty. */
+      if(!data.session){
+        authBusy=false; authMode='in';
+        authMsg='Check your email to confirm the address, then sign in.';
+        return render();
+      }
+      session=data.session;
+    }else{
+      const {data,error}=await supa.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      session=data.session;
+    }
+  }catch(err){
+    authBusy=false;
+    authMsg=err&&err.message?err.message:'Could not sign in. Try again.';
+    return render();
+  }
+
+  authBusy=false;
+  afterSignIn();
+}
+
+/* One place to land a signed-in user, used by both the form and the boot
+   check, so a fresh sign-in and a returning visitor behave the same. */
+function afterSignIn(){
+  if(session&&session.user&&session.user.email&&!S.owner.email){
+    S.owner.email=session.user.email;
+    DB.save(S);
+  }
+  view=S.onboarded?'dash':'wizard';
+  if(view==='wizard'&&!wizDraft){ wizDraft=newDraft(); wizStep=0 }
+  render();
+  toast('Signed in','ok');
 }
 function bindActions(scope){
   scope.querySelectorAll('[data-a]').forEach(el=>{
@@ -2272,7 +2422,34 @@ function routeHash(){
 }
 routeHash();
 window.addEventListener('hashchange',()=>{ if(routeHash()) render() });
+
+/* Boot is async now, because "is anyone signed in?" is a question only Supabase
+   can answer and it has to read and possibly refresh a token first. Render once
+   immediately so the page is never blank, then again once the answer is back. */
 render();
+
+(async function boot(){
+  if(!supa){ toast('Could not load the accounts library. Check your connection.','bad',8000); return }
+  const {data}=await supa.auth.getSession();
+  session=data.session||null;
+
+  /* Fires on sign-in, sign-out and every silent token refresh, including in
+     another tab. Keeping our copy in step with it means a session that expires
+     while the tab sits open shows the login screen instead of failing writes. */
+  supa.auth.onAuthStateChange((_evt,s)=>{
+    session=s||null;
+    if(!session&&!['landing','auth','guest','vendorwalk'].includes(view)){ view='auth'; render() }
+  });
+
+  authReady=true;
+  /* A signed-in owner should never land on the marketing page. Guest and vendor
+     link views are left alone — those are where they were sent on purpose. */
+  if(session&&!['guest','vendorwalk'].includes(view)){
+    view=S.onboarded?'dash':'wizard';
+    if(view==='wizard'&&!wizDraft){ wizDraft=newDraft(); wizStep=0 }
+  }
+  render();
+})();
 </script>
 </body>
 </html>
