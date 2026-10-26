@@ -43,11 +43,12 @@ Save `sql/checks.sql` as a named snippet in the Supabase SQL editor rather than 
 - [x] **2.1** Project URL `https://wcmnxtqjoretnboplcos.supabase.co` and the anon key are in `index.html`. Both safe to publish; the one to never share is `service_role`.
 - [x] **2.2 (me)** Supabase library added, sign in / create account screen built, app views gated behind a session, sign out in the sidebar.
 - [ ] **2.3 (Y)** Run `sql/004_profile_trigger.sql` in Supabase. Creates the `profiles` row automatically at signup. **Do this before 2.5**, otherwise the new account has no profile row and every insert later fails.
-- [ ] **2.4 (Y)** Supabase → Authentication → Sign In / Providers. If **Confirm email** is on, either turn it off for now or be ready to click a link in your inbox. Either is fine; you just need to know which.
-- [ ] **2.5 (Y)** Review the diff in GitHub Desktop, commit, push. Wait for Netlify to redeploy.
-- [ ] **2.6 (Y)** Create an account with your real email. Confirm you land in the app.
+- [x] **2.4** Confirm email is **on**. Signup sends a link that must be clicked before sign-in works.
+- [x] **2.5** Committed and pushed; Netlify redeployed.
+- [x] **2.6** Account created with the real email and confirmed. The confirmation link dead-ended on `localhost:3000` — see 2.4b.
+- [ ] **2.4b (Y)** Supabase → Authentication → **URL Configuration**. Set **Site URL** to `https://propertypuls.netlify.app` and add `https://propertypuls.netlify.app/**` to **Redirect URLs**. The default is `http://localhost:3000`, a developer placeholder, which is why the confirmation link went nowhere. Affects confirmation and password-reset emails only; ordinary sign-in never redirects.
 - [ ] **2.7 (Y)** Run queries 4 and 5 in `sql/checks.sql`. Query 4 should return **zero rows** (every account has a profile), query 5 should return **one row** (the trigger is attached).
-- [ ] **2.8 (Y)** In a private window, create a second account with a throwaway email. It should sign in and reach an empty setup wizard.
+- [ ] **2.8 (Y)** In a private window, create a second account and confirm it signs in and reaches an empty setup wizard. Since confirmation emails are on, the throwaway address still needs a real inbox — use `luisnoboaperez+test@gmail.com`. Gmail ignores everything after the `+`, so it lands in your normal inbox while Supabase treats it as a separate account.
 
 **What Step 2 does not prove.** Your properties still load from this browser's storage, not from the database — Step 2 added the account, not the data move. So 2.8 tests that signup works, and nothing more. If the second account somehow shows your property, that is localStorage being shared, not a security hole. The real isolation test is Step 3.5, after the data actually lives in Supabase.
 
@@ -70,7 +71,7 @@ This is the milestone. After this it's a real tool.
 
 ## Step 5 — the demo account (30 min)
 
-- [ ] **5.1 (Y)** In Supabase, Authentication → Users → Add user. Make a demo email and password.
+- [ ] **5.1 (Y)** In Supabase, Authentication → Users → Add user. Make a demo email and password, and tick **Auto Confirm User** — a recruiter is never going to click a confirmation link in an inbox you own.
 - [ ] **5.2 (Y)** Log in as that user in a private window. Run onboarding with a fictional property and a few months of plausible history.
 - [ ] **5.3 (me)** Put the demo credentials at the top of the repo README so recruiters find them immediately.
 

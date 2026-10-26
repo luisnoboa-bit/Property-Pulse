@@ -6,15 +6,20 @@
 <title>PropertyPulse - Property Maintenance Scheduling</title>
 <style>
 :root{
-  --bg:#0e1117; --bg2:#151a23; --card:#1a212c; --card2:#212a37;
-  --line:#2b3546; --line2:#3a4759;
-  --tx:#e8edf5; --tx2:#9dabc0; --tx3:#6b7a90;
-  --acc:#4f9cf9; --acc2:#3b82f6; --accDim:rgba(79,156,249,.12);
-  --ok:#34d399; --okDim:rgba(52,211,153,.12);
-  --warn:#fbbf24; --warnDim:rgba(251,191,36,.12);
-  --bad:#f87171; --badDim:rgba(248,113,113,.12);
-  --r:10px; --r2:14px;
-  --sh:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  --bg:#12111a; --bg2:#191827; --card:#201f30; --card2:#28273c;
+  --line:#34324a; --line2:#454262;
+  --tx:#f1edf7; --tx2:#aca7c4; --tx3:#7a7596;
+  --acc:#FF6B4D; --acc2:#F2502F; --accDim:rgba(255,107,77,.15);
+  --ok:#34d399; --okDim:rgba(52,211,153,.14);
+  --warn:#FFC247; --warnDim:rgba(255,194,71,.16);
+  --bad:#FF5C7A; --badDim:rgba(255,92,122,.14);
+  --violet:#8B6BFF; --violetDim:rgba(139,107,255,.15);
+  --teal:#19C6A6; --tealDim:rgba(25,198,166,.15);
+  --pink:#FF6FAE; --pinkDim:rgba(255,111,174,.15);
+  --blue:#4F9CF9; --blueDim:rgba(79,156,249,.15);
+  --amber:#FFC247; --amberDim:rgba(255,194,71,.15);
+  --r:12px; --r2:16px;
+  --sh:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -38,8 +43,9 @@ a{color:var(--acc);text-decoration:none}
 .brand{padding:20px 18px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
 .brandMark{
   width:32px;height:32px;border-radius:9px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--acc),#8b5cf6);
+  background:linear-gradient(135deg,var(--acc),var(--violet));
   display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;
+  box-shadow:0 3px 10px rgba(255,107,77,.35);
 }
 .brandName{font-weight:700;letter-spacing:-.3px;font-size:15px}
 .brandSub{font-size:10.5px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
@@ -52,7 +58,11 @@ a{color:var(--acc);text-decoration:none}
 }
 .navItem:hover{background:var(--card);color:var(--tx)}
 .navItem.on{background:var(--accDim);color:var(--acc);font-weight:600}
-.navIco{width:17px;text-align:center;flex-shrink:0;opacity:.9}
+.navIco{
+  width:26px;height:26px;border-radius:8px;flex-shrink:0;
+  display:grid;place-items:center;transition:.13s;
+}
+.navIco svg{width:15px;height:15px}
 .navBadge{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center}
 .sideFoot{padding:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx3)}
 
@@ -109,6 +119,10 @@ select.inp{cursor:pointer}
 .pill.acc{background:var(--accDim);color:var(--acc)}
 
 .empty{text-align:center;padding:48px 20px;color:var(--tx3)}
+.empty::before{
+  content:'';display:block;width:64px;height:64px;margin:0 auto 14px;opacity:.95;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='14' y='8' width='36' height='48' rx='6' fill='%23232c3d'/%3E%3Crect x='22' y='4' width='20' height='10' rx='3' fill='%23454262'/%3E%3Crect x='20' y='22' width='24' height='4' rx='2' fill='%23454262'/%3E%3Crect x='20' y='32' width='24' height='4' rx='2' fill='%23454262'/%3E%3Crect x='20' y='42' width='16' height='4' rx='2' fill='%23454262'/%3E%3Ccircle cx='48' cy='44' r='14' fill='%23FF6B4D'/%3E%3Cpath d='M41 44l4 4 8-8' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
 .empty h3{font-size:15px;color:var(--tx2);margin-bottom:6px;font-weight:600}
 .empty p{font-size:13px;max-width:400px;margin:0 auto 16px}
 
@@ -212,8 +226,10 @@ select.inp{cursor:pointer}
 .landCta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
 .btn.lg{padding:12px 22px;font-size:14.5px;border-radius:10px}
 .landFeat{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:960px;padding:24px;width:100%}
-.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:20px;text-align:left}
-.featIco{font-size:20px;margin-bottom:9px}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:20px;text-align:left;transition:.16s}
+.feat:hover{transform:translateY(-3px);border-color:var(--line2)}
+.featIco{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;margin-bottom:12px}
+.heroArt{max-width:380px;margin:4px auto 20px;display:block}
 .featT{font-weight:650;font-size:14px;margin-bottom:5px}
 .featP{font-size:13px;color:var(--tx2);line-height:1.5}
 .landFoot{padding:36px 24px;color:var(--tx3);font-size:12.5px;text-align:center}
@@ -717,7 +733,7 @@ function findLocalBtn(trade,prop,jobName){
   return `<a class="findLocal" target="_blank" rel="noopener noreferrer"
      href="${googleUrl(trade,prop,jobName)}"
      title="Opens a Google search for a ${esc(noun)} near ${esc(where||'your property')}">
-     &#128269; Find a local ${esc(noun)}</a>`;
+     ${ICONS.search} Find a local ${esc(noun)}</a>`;
 }
 
 /* ---------- 6b. APPLIANCE COMPLETENESS ---------------------
@@ -995,6 +1011,25 @@ function Landing(){
     <button class="btn sm" data-a="guestPortal">Guest access</button>
   </div>
   <div class="landHero">
+    <svg class="heroArt" viewBox="0 0 420 240" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2a2750"/><stop offset="1" stop-color="#201f30"/>
+      </linearGradient></defs>
+      <rect x="0" y="0" width="420" height="240" rx="22" fill="url(#skyG)"/>
+      <circle cx="338" cy="54" r="30" fill="#FFC247" opacity=".92"/>
+      <circle cx="60" cy="86" r="24" fill="#8B6BFF"/>
+      <path d="M52 86l5 5 11-13" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="356" cy="172" r="22" fill="#19C6A6"/>
+      <path d="M356 162v20M346 172h20" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="44" cy="186" r="19" fill="#FF6FAE"/>
+      <circle cx="44" cy="186" r="7" fill="none" stroke="#fff" stroke-width="2.5"/>
+      <rect x="118" y="118" width="184" height="104" rx="10" fill="#28273c"/>
+      <polygon points="108,118 210,52 312,118" fill="#FF6B4D"/>
+      <rect x="194" y="158" width="32" height="64" rx="3" fill="#161522"/>
+      <circle cx="218" cy="190" r="2.2" fill="#FFC247"/>
+      <rect x="138" y="146" width="32" height="32" rx="6" fill="#19C6A6"/>
+      <rect x="250" y="146" width="32" height="32" rx="6" fill="#4F9CF9"/>
+    </svg>
     <h1 class="landH1">Stop tracking property maintenance in a <em>spreadsheet you never update</em>.</h1>
     <p class="landP">PropertyPulse asks what your property actually has, builds the maintenance schedule for you, tells you what is past due, and suggests which vendor to call. Guests report issues straight into the same queue.</p>
     <div class="landCta">
@@ -1004,24 +1039,45 @@ function Landing(){
     <p style="font-size:12px;color:var(--tx3);margin-top:14px">Trying it out? Sign in with the demo account in the README.</p>
   </div>
   <div class="landFeat">
-    <div class="feat"><div class="featIco">&#9881;</div><div class="featT">Schedule builds itself</div><div class="featP">Answer a short setup questionnaire and the app generates every recurring task the property needs, seasonally timed. A condo never sees gutter tasks.</div></div>
-    <div class="feat"><div class="featIco">&#9200;</div><div class="featT">Past due is impossible to miss</div><div class="featP">Overdue work is pinned to the top of the dashboard and pushed to a scheduled email digest, so nothing depends on you remembering to open a sheet.</div></div>
-    <div class="feat"><div class="featIco">&#128222;</div><div class="featT">The right vendor, pre-attached</div><div class="featP">Each task knows what trade it needs and surfaces the matching vendor from your directory with their phone and email one tap away.</div></div>
+    <div class="feat"><div class="featIco" style="background:#8B6BFF22;color:#8B6BFF">${ICONS.gear}</div><div class="featT">Schedule builds itself</div><div class="featP">Answer a short setup questionnaire and the app generates every recurring task the property needs, seasonally timed. A condo never sees gutter tasks.</div></div>
+    <div class="feat"><div class="featIco" style="background:#FFC24722;color:#FFC247">${ICONS.clock}</div><div class="featT">Past due is impossible to miss</div><div class="featP">Overdue work is pinned to the top of the dashboard and pushed to a scheduled email digest, so nothing depends on you remembering to open a sheet.</div></div>
+    <div class="feat"><div class="featIco" style="background:#19C6A622;color:#19C6A6">${ICONS.phone}</div><div class="featT">The right vendor, pre-attached</div><div class="featP">Each task knows what trade it needs and surfaces the matching vendor from your directory with their phone and email one tap away.</div></div>
   </div>
   <div class="landFoot">Prototype build &middot; data stored locally in this browser</div>
 </div>`;
 }
 
+/* ---------- icon set (inline SVG, replaces old glyph icons) ---------- */
+const ICONS={
+  dash:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="2" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="11" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.6"/></svg>',
+  sched:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="14" rx="2.2" stroke="currentColor" stroke-width="1.6"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.6"/><path d="M6 2v4M14 2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="12.5" r="1.2" fill="currentColor"/><circle cx="13" cy="12.5" r="1.2" fill="currentColor"/></svg>',
+  walk:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="15" rx="2.2" stroke="currentColor" stroke-width="1.6"/><rect x="7" y="1.3" width="6" height="3" rx="1" fill="currentColor"/><path d="M7 11l2.1 2.1L13.3 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  requests:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M3 5.3A2.3 2.3 0 0 1 5.3 3h9.4A2.3 2.3 0 0 1 17 5.3V12a2.3 2.3 0 0 1-2.3 2.3H9l-4 3v-3H5.3A2.3 2.3 0 0 1 3 12V5.3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  props:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M3 9.5 10 3l7 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 8.5V16a1 1 0 0 0 1 1h3v-4.5h2V17h3a1 1 0 0 0 1-1V8.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  appl:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><rect x="5" y="6" width="10" height="6" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M10 12v3a3 3 0 0 1-3 3H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  vendors:'<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M12.6 3.4a3.6 3.6 0 0 0-4.7 4.7L3 13v4h4l4.9-4.9a3.6 3.6 0 0 0 4.7-4.7l-2.1 2.1-2-2 2.1-2.1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  settings:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2.3M10 15.7V18M2 10h2.3M15.7 10H18M4.5 4.5l1.6 1.6M13.9 13.9l1.6 1.6M4.5 15.5l1.6-1.6M13.9 6.1l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  clock:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  phone:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 5 5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  gear:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  menu:'<svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  warn:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><path d="M10 3.3 18 16H2L10 3.3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 8v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.3" r="0.9" fill="currentColor"/></svg>',
+  info:'<svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="6.3" r="1" fill="currentColor"/></svg>',
+  search:'<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 16l-3.2-3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  undo:'<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M13 2.5v4h-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  check:'<svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
 /* ---------- app shell ------------------------------------- */
 const NAV=[
-  {k:'dash',   i:'&#9632;', t:'Dashboard'},
-  {k:'sched',  i:'&#9635;', t:'Schedule'},
-  {k:'walk',   i:'&#9744;', t:'Walkthroughs'},
-  {k:'requests',i:'&#9993;',t:'Requests'},
-  {k:'props',  i:'&#8962;', t:'Properties'},
-  {k:'appl',   i:'&#9707;', t:'Appliances'},
-  {k:'vendors',i:'&#9782;', t:'Vendors'},
-  {k:'settings',i:'&#9881;',t:'Settings'},
+  {k:'dash',   i:ICONS.dash,     c:'#8B6BFF', t:'Dashboard'},
+  {k:'sched',  i:ICONS.sched,    c:'#19C6A6', t:'Schedule'},
+  {k:'walk',   i:ICONS.walk,     c:'#FF6B4D', t:'Walkthroughs'},
+  {k:'requests',i:ICONS.requests,c:'#FF6FAE', t:'Requests'},
+  {k:'props',  i:ICONS.props,    c:'#FFC247', t:'Properties'},
+  {k:'appl',   i:ICONS.appl,     c:'#4F9CF9', t:'Appliances'},
+  {k:'vendors',i:ICONS.vendors,  c:'#34D399', t:'Vendors'},
+  {k:'settings',i:ICONS.settings,c:'#9dabc0', t:'Settings'},
 ];
 
 function Shell(){
@@ -1042,7 +1098,7 @@ function Shell(){
     if(n.k==='appl'&&incAppl) badge=`<span class="navBadge info">${incAppl}</span>`;
     if(n.k==='walk'&&openWalk) badge=`<span class="navBadge info">${openWalk}</span>`;
     const on=view===n.k||(n.k==='walk'&&view==='walkdetail');
-    return `<button class="navItem${on?' on':''}" data-nav="${n.k}"><span class="navIco">${n.i}</span>${n.t}${badge}</button>`;
+    return `<button class="navItem${on?' on':''}" data-nav="${n.k}"><span class="navIco" style="background:${n.c}22;color:${n.c}">${n.i}</span>${n.t}${badge}</button>`;
   }).join('');
 
   const propPicker=S.properties.length>1?`<select class="inp" style="width:auto;max-width:220px" data-a="switchProp">
@@ -1072,7 +1128,7 @@ function Shell(){
    </aside>
    <div class="main">
      <header class="topbar">
-       <button class="btn sm" id="menuBtn" data-a="toggleMenu">&#9776;</button>
+       <button class="btn sm" id="menuBtn" data-a="toggleMenu">${ICONS.menu}</button>
        <div class="pageTitle">${titles[view]||''}</div>
        <div class="topSpacer"></div>
        ${propPicker}
@@ -1090,11 +1146,11 @@ function Dash(p,sch){
   const doneYTD=S.completions.filter(c=>c.propId===p.id&&pd(c.date).getFullYear()===new Date().getFullYear()).length;
   const openReq=S.requests.filter(r=>r.propId===p.id&&r.status!=='closed');
 
-  const demoBanner=S.demo?`<div class="banner"><span>&#9432;</span><div>You are viewing demo data for a sample property. Nothing here is real.</div>
+  const demoBanner=S.demo?`<div class="banner"><span>${ICONS.info}</span><div>You are viewing demo data for a sample property. Nothing here is real.</div>
     <button class="btn sm" data-a="exitDemo">Start fresh</button></div>`:'';
 
   const inc=incompleteAppliances(p.id);
-  const applNag=inc.length?`<div class="nag">&#9432;
+  const applNag=inc.length?`<div class="nag">${ICONS.info}
     <div><b>${inc.length} item${inc.length===1?'':'s'} still need details.</b>
       ${esc(inc.slice(0,3).map(a=>APPLIANCE_KEYS[a.key]||a.key).join(', '))}${inc.length>3?' and '+(inc.length-3)+' more':''}
       ${inc.length===1?'is':'are'} missing brand, model or install year. Add them next time you are at the property.</div>
@@ -1162,7 +1218,7 @@ function taskRow(t){
   const exact=hasExactVendor(t.trade);
   let vChip='';
   if(v.length&&exact){
-    vChip=`<div class="vendorChip">&#9782; <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}
+    vChip=`<div class="vendorChip">${ICONS.vendors} <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}
       ${v.length>1?`<span style="color:var(--tx3)">+${v.length-1} more</span>`:''}</div>`;
   } else if(t.trade){
     // no exact-trade vendor: show the handyman stand-in if we have one,
@@ -1189,7 +1245,7 @@ function taskRow(t){
     </div>
     <div class="taskActs">
       <button class="btn sm pri" data-a="complete" data-id="${t.ruleId}">Mark done</button>
-      <button class="btn sm gho" data-a="snooze" data-id="${t.ruleId}" title="Push out 30 days">&#8635;</button>
+      <button class="btn sm gho" data-a="snooze" data-id="${t.ruleId}" title="Push out 30 days">${ICONS.undo}</button>
     </div>
   </div>`;
 }
@@ -1302,7 +1358,7 @@ function wizAppliances(){
   }).join('');
   return `<h2 class="wizH">Appliance and system details</h2>
   <p class="wizP">Brand, model, and install year. This is what you scramble for when something breaks at 9pm, and it drives the age-based replacement warnings.</p>
-  <div class="nag" style="margin-bottom:14px">&#9432;
+  <div class="nag" style="margin-bottom:14px">${ICONS.info}
     <div>You do not need this now. Most of it is on a sticker behind or inside the unit, so skip ahead and fill it in when you are next at the property. PropertyPulse will keep reminding you until it is done.</div>
     <button class="btn sm" data-a="wizSkipAppl">Skip for now</button></div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">${filled} of ${keys.length} complete</div>
@@ -1547,7 +1603,7 @@ function reqRow(r){
       </div>
       <div style="font-size:12.5px;color:var(--tx2);margin-top:6px">${esc(r.body)}</div>
       ${v.length&&hasExactVendor(r.trade)
-        ?`<div class="vendorChip">&#9782; Suggested: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}</div>`
+        ?`<div class="vendorChip">${ICONS.vendors} Suggested: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email||'')}</div>`
         :(r.trade&&r.status!=='closed'
           ?`<div>${v.length?`<div class="vendorChip" style="color:var(--tx3)">No ${esc(TRADES[r.trade])} vendor saved. Closest: <b style="color:var(--tx2)">${esc(v[0].name)}</b></div>`:''}
              ${findLocalBtn(r.trade,p,r.title)}</div>`:'')}
@@ -1610,7 +1666,7 @@ function Appliances(){
       <td>${warn}</td>
       <td style="text-align:right"><button class="btn sm${applIncomplete(a)?' pri':''}" data-a="editAppl" data-id="${a.id}">${applIncomplete(a)?'Complete':'Edit'}</button></td></tr>`;
   }).join('');
-  const nag=inc.length?`<div class="nag">&#9432;
+  const nag=inc.length?`<div class="nag">${ICONS.info}
     <div><b>${inc.length} of ${list.length} still need details.</b> Model numbers are usually on a sticker inside the door, behind the unit, or on the side panel. Photograph them once and you are done for good.</div>
     <button class="btn sm pri" data-a="editAppl" data-id="${inc[0].id}">Start with ${esc(APPLIANCE_KEYS[inc[0].key]||inc[0].key)}</button></div>`:'';
   return `${nag}<div class="card">
@@ -1639,11 +1695,11 @@ function Vendors(){
     gaps=[...needed].filter(t=>!S.vendors.some(v=>(v.trades||[]).includes(t)));
   }
   const gapCard=gaps.length?`<div class="card" style="border-color:rgba(251,191,36,.3)">
-    <div class="cardHd"><div><div class="cardTitle" style="color:var(--warn)">&#9888; ${gaps.length} coverage gap${gaps.length===1?'':'s'}</div>
+    <div class="cardHd"><div><div class="cardTitle" style="color:var(--warn);display:flex;align-items:center;gap:7px">${ICONS.warn} ${gaps.length} coverage gap${gaps.length===1?'':'s'}</div>
       <div class="cardSub">Your schedule needs these trades but no vendor is saved. Each button opens a Google search for that trade near ${esc(propLocation(p)||'your property')}.</div></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${gaps.map(t=>`<a class="findLocal" target="_blank" rel="noopener noreferrer" href="${googleUrl(t,p)}"
-        style="font-size:12.5px;padding:7px 13px">&#128269; Find a local ${esc((TRADES[t]||t).toLowerCase())}</a>`).join('')}
+        style="font-size:12.5px;padding:7px 13px">${ICONS.search} Find a local ${esc((TRADES[t]||t).toLowerCase())}</a>`).join('')}
     </div></div>`:'';
 
   return `${gapCard}<div class="card">
@@ -1875,7 +1931,7 @@ function reqModal(id){
      <label class="f"><span>Message back to the guest</span>
        <textarea class="inp" id="rnote" placeholder="Plumber is booked for Thursday between 9 and 11.">${esc(r.note)}</textarea>
        <div class="hint">This appears in the guest's portal view.</div></label>
-     ${v.length?`<div class="vendorChip" style="margin-top:0">&#9782; Suggested vendor: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email)}</div>`:''}`,
+     ${v.length?`<div class="vendorChip" style="margin-top:0">${ICONS.vendors} Suggested vendor: <b>${esc(v[0].name)}</b> &middot; ${esc(v[0].phone||v[0].email)}</div>`:''}`,
     `<button class="btn" data-a="closeModal">Cancel</button>
      <button class="btn pri" data-a="saveReq">Save</button>`);
 }
@@ -1901,7 +1957,7 @@ function walkModal(){
        ${sorted.map(v=>`<option value="${v.id}">${esc(v.name)}${(v.trades||[]).length?' &middot; '+esc((v.trades||[]).map(t=>TRADES[t]).join(', ')):''}</option>`).join('')}
      </select>
      <div class="hint">Assign a vendor and you get a link to send them. They fill in the same checklist without needing an account.</div></label>
-     ${gap?`<div class="nag" style="margin-top:4px">&#9432;
+     ${gap?`<div class="nag" style="margin-top:4px">${ICONS.info}
        <div>You have no handyman or general inspector saved. That is usually who runs a walkthrough.</div>
        ${findLocalBtn('handyman',p,'property walkthrough inspection')}</div>`:''}`,
     `<button class="btn" data-a="closeModal">Cancel</button>
