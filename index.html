@@ -286,6 +286,75 @@ select.inp{cursor:pointer}
 .tlItem{position:relative;padding-bottom:14px}
 .tlDot{position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--line2);border:2px solid var(--bg)}
 .tlItem.od .tlDot{background:var(--bad)} .tlItem.soon .tlDot{background:var(--warn)}
+/* ---------- schedule board ---------- */
+.viewBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px}
+.viewTabs{display:flex;gap:2px;flex:1;flex-wrap:wrap}
+.viewTab{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:var(--r);background:transparent;color:var(--tx3);font-size:14px;cursor:pointer}
+.viewTab svg{width:16px;height:16px}
+.viewTab:hover{background:var(--hover);color:var(--tx2)}
+.viewTab.on{background:var(--hover);color:var(--tx);font-weight:500}
+.viewTab:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(31,111,197,.25)}
+.board{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.bCol{flex:1 0 220px;max-width:320px;box-sizing:border-box;border-radius:var(--r-lg);padding:8px;background:var(--tint);scroll-snap-align:start}
+.bCol.bad{--tint:#FDF6F5} .bCol.warn{--tint:#FDFAF1} .bCol.acc{--tint:#F5F9FC} .bCol.ok{--tint:#F6FAF6}
+.bColHd{display:flex;align-items:center;gap:8px;padding:4px 4px 10px}
+.bCount{font-size:13px;color:var(--tx3)}
+.bCards{display:flex;flex-direction:column;gap:8px}
+.bCard{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-lg);box-shadow:var(--sh);padding:12px 14px;font:inherit;color:inherit}
+button.bCard{cursor:pointer;transition:background .12s,border-color .12s}
+button.bCard:hover{background:#FCFCFB;border-color:var(--line2)}
+button.bCard:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(31,111,197,.25)}
+.bCardBody{flex:1;min-width:0}
+.bCardT{font-size:15px;font-weight:500;line-height:1.4}
+.bCardM{font-size:13px;color:var(--tx3);margin-top:4px}
+.bCardN{font-size:13px;font-weight:500;margin-top:2px}
+.bCardN.bad{color:var(--badTx)} .bCardN.warn{color:var(--warnTx)}
+.bAv{width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--muteDim);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--tx2)}
+.bMore{display:flex;align-items:center;gap:6px;width:100%;height:34px;padding:0 8px;border:0;border-radius:var(--r);
+  background:transparent;color:var(--tx3);font-size:14px;cursor:pointer;text-align:left}
+.bMore:hover{background:rgba(15,15,15,.04);color:var(--tx2)}
+.bEmpty{font-size:13px;color:var(--tx3);padding:6px 6px 10px}
+@media(max-width:640px){ .bCol{flex:0 0 86%;max-width:none} }
+/* work status on a card (separate from the column it sits in) */
+.bCardF{display:flex;align-items:center;gap:8px;margin-top:10px}
+.wst{position:relative;display:inline-flex;align-items:center}
+.wst::before{content:"";position:absolute;left:9px;top:50%;margin-top:-3.5px;width:7px;height:7px;border-radius:50%;background:var(--mute);pointer-events:none}
+.wst.progress::before{background:var(--info)}
+.wst select{appearance:none;-webkit-appearance:none;height:28px;padding:0 26px 0 22px;border:1px solid var(--line2);border-radius:var(--r-sm);
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236F6E69' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center/12px;
+  font:inherit;font-size:12.5px;font-weight:500;color:var(--tx2);cursor:pointer}
+.wst select:hover{border-color:var(--tx3)}
+.wst.progress select{color:var(--infoTx);border-color:#BCD7EA;background-color:#F7FBFD}
+.wst select:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(31,111,197,.25)}
+.wstDone{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--okTx)}
+.wstDone svg{width:13px;height:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* focused category page (e.g. all overdue tasks, oldest first) */
+.crumbLink{border:0;background:transparent;padding:0;font:inherit;color:var(--tx2);cursor:pointer}
+.crumbLink:hover{color:var(--tx);text-decoration:underline}
+.catSum{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:20px}
+.mLbl{display:none}
+.prList{border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--card)}
+.prRow{display:grid;grid-template-columns:40px minmax(0,1fr) 150px 200px 150px auto;gap:16px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.prRow:first-child{border-top:0}
+.prRow.hd{font-size:12px;color:var(--tx3);font-weight:500;padding-top:10px;padding-bottom:10px;background:var(--bg2)}
+.prRank{font-size:14px;font-weight:600;color:var(--tx2);font-variant-numeric:tabular-nums}
+.prName{font-size:15px;font-weight:500;line-height:1.35}
+.prSub{font-size:13px;color:var(--tx3);margin-top:2px}
+.prDate{font-size:13px;color:var(--tx2)}
+.lateTx{font-size:13px;font-weight:500;color:var(--badTx);margin-bottom:5px}
+.soonTx{font-size:13px;font-weight:500;color:var(--warnTx)}
+.lateBar{height:6px;border-radius:3px;background:var(--badDim);overflow:hidden}
+.lateBar>i{display:block;height:100%;border-radius:3px;background:var(--bad)}
+@media(max-width:760px){
+  .prRow{grid-template-columns:28px minmax(0,1fr);gap:6px 12px}
+  .prRow>*:nth-child(n+3){grid-column:2}
+  .prRow.hd{display:none}
+  .mLbl{display:inline}
+  .prRow .btn{justify-self:start}
+}
 .tlMo{font-size:14px;color:var(--tx2);font-weight:600;margin:22px 0 8px}
 
 @media(max-width:900px){
@@ -602,6 +671,9 @@ function blankState(){
     owner:{name:'',email:''},
     properties:[], activeProp:null, activeWalk:null,
     vendors:[], appliances:[], completions:[], requests:[], custom:[], walkthroughs:[],
+    // Work status per task occurrence: { 'propId|ruleId': {s:'progress', due:'YYYY-MM-DD'} }.
+    // Tied to the due date, so logging the work resets the next occurrence to Not started.
+    taskStatus:{},
     prefs:{emailDigest:true, digestDay:'mon', whatsapp:false, phone:'', lookahead:60},
   };
 }
@@ -1099,7 +1171,7 @@ function Shell(){
   const openReq=S.requests.filter(r=>r.status!=='closed').length;
   const incAppl=p?incompleteAppliances(p.id).length:0;
   const openWalk=p?activeWalkthroughs(p.id).filter(w=>w.status!=='complete').length:0;
-  const titles={dash:'Home',sched:'Maintenance schedule',walk:'Property walkthroughs',
+  const titles={dash:'Home',sched:'Maintenance schedule',schcat:(SCH_CATS[schCat]||SCH_CATS.overdue).page,walk:'Property walkthroughs',
     requests:'Maintenance requests',props:'Properties',appl:'Appliances & systems',
     vendors:'Vendor directory',settings:'Settings',walkdetail:'Walkthrough'};
 
@@ -1109,7 +1181,7 @@ function Shell(){
     if(n.k==='requests'&&openReq) badge=`<span class="navBadge">${openReq}</span>`;
     if(n.k==='appl'&&incAppl) badge=`<span class="navBadge info">${incAppl}</span>`;
     if(n.k==='walk'&&openWalk) badge=`<span class="navBadge info">${openWalk}</span>`;
-    const on=view===n.k||(n.k==='walk'&&view==='walkdetail');
+    const on=view===n.k||(n.k==='walk'&&view==='walkdetail')||(n.k==='sched'&&view==='schcat');
     return [n.k,`<button class="navItem${on?' on':''}" data-nav="${n.k}"${on?' aria-current="page"':''}><span class="navIco">${n.i}</span>${n.t}${badge}</button>`];
   });
   const navBy=Object.fromEntries(nav);
@@ -1121,10 +1193,11 @@ function Shell(){
       <span class="navIco">${ICONS.props}</span><span class="propName">${esc(x.nickname||x.address)}</span>${late?'<span class="lateDot" aria-label="Has overdue work"></span>':''}</button>`;
   }).join('');
 
-  const pageIcons={dash:ICONS.dash,sched:ICONS.sched,walk:ICONS.walk,walkdetail:ICONS.walk,requests:ICONS.requests,
+  const pageIcons={dash:ICONS.dash,sched:ICONS.sched,schcat:ICONS.sched,walk:ICONS.walk,walkdetail:ICONS.walk,requests:ICONS.requests,
     props:ICONS.props,appl:ICONS.appl,vendors:ICONS.vendors,settings:ICONS.settings};
   const crumbProp=p&&view!=='props'&&view!=='vendors'&&view!=='settings'&&view!=='requests'
-    ?`<span>${esc(p.nickname||p.address)}</span><span class="crumbSep">/</span>`:'';
+    ?`<span>${esc(p.nickname||p.address)}</span><span class="crumbSep">/</span>`
+     +(view==='schcat'?`<button class="crumbLink" data-a="schView" data-k="board">Maintenance schedule</button><span class="crumbSep">/</span>`:''):'';
 
   let body='';
   if(view==='dash') body=Dash(p,sch);
@@ -1136,6 +1209,7 @@ function Shell(){
   else if(view==='appl') body=Appliances();
   else if(view==='vendors') body=Vendors();
   else if(view==='settings') body=Settings();
+  else if(view==='schcat') body=ScheduleCategory(p,sch);
 
   return `<div id="app">
    <aside class="sidebar" id="sb">
@@ -1191,7 +1265,7 @@ function Dash(p,sch){
 
   const stats=`<div class="stats">
     <div class="stat ${od.length?'bad':'ok'}"><div class="statN">${od.length}</div><div class="statL">Overdue</div></div>
-    <div class="stat warn"><div class="statN">${soon.length}</div><div class="statL">Due in 30 days</div></div>
+    <div class="stat warn"><div class="statN">${soon.length}</div><div class="statL">Due this month</div></div>
     <div class="stat acc"><div class="statN">${openReq.length}</div><div class="statL">Open requests</div></div>
     <div class="stat ok"><div class="statN">${doneYTD}</div><div class="statL">Completed this year</div></div>
   </div>`;
@@ -1433,8 +1507,172 @@ function wizReview(){
    9. SCHEDULE VIEW
    ============================================================ */
 let schFilter='all';
+// Board is the default; phones start on the list (one column at a time is easier there)
+let schView=(typeof window!=='undefined'&&window.innerWidth<640)?'list':'board';
+const BOARD_LIMIT=5;          // cards per column before "N more"
+const DONE_WINDOW_DAYS=14;    // Done column only shows the last 2 weeks
+let schCat='overdue';         // which column the focused page shows
+const SCH_CATS={
+  overdue:{label:'Overdue',        page:'Overdue tasks',            pill:'bad'},
+  soon:   {label:'Due this month', page:'Due this month',           pill:'warn'},
+  future: {label:'Upcoming',       page:'Upcoming tasks',           pill:'acc'},
+  done:   {label:'Done',           page:'Done in the last 2 weeks', pill:'ok'},
+};
+const WORK_STATUS={todo:'Not started',progress:'In progress',done:'Done'};
+
+function workStatus(propId,t){
+  const rec=(S.taskStatus||{})[propId+'|'+t.ruleId];
+  return rec&&rec.due===iso(t.due)?rec.s:'todo';
+}
+/* The status dropdown on a card. Choosing Done opens "Log completed work". */
+function statusCtl(t){
+  const p=activeProp(); const st=workStatus(p.id,t);
+  return `<label class="wst ${st}"><span class="sr">Status for ${esc(t.name)}</span>
+    <select data-a="setStatus" data-id="${t.ruleId}">
+      ${Object.entries(WORK_STATUS).map(([k,l])=>`<option value="${k}"${k===st?' selected':''}>${l}</option>`).join('')}
+    </select></label>`;
+}
+const DONE_CHIP=`<span class="wstDone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</span>`;
+function recentDone(p){
+  const cutoff=new Date(today().getTime()-DONE_WINDOW_DAYS*MS_DAY);
+  return S.completions
+    .filter(c=>c.propId===p.id&&!c.snoozed&&c.note!=='Initial'&&pd(c.date)<=today()&&pd(c.date)>=cutoff)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+}
+function catItems(cat,p,sch){
+  if(cat==='done') return recentDone(p);
+  const items=sch.filter(t=>t.status===cat);
+  // overdue: oldest first, i.e. most days late = priority 1
+  return cat==='overdue'?items.sort((a,b)=>a.days-b.days):items.sort((a,b)=>a.due-b.due);
+}
+
+/* Short date, adding the year only when it is not this year */
+function fmtWhen(d){return pd(d).getFullYear()===today().getFullYear()?fmtShort(d):fmt(d)}
+function initials(name){return String(name||'').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('')}
+function ruleLabel(id){
+  const r=RULES.find(x=>x.id===id)||S.custom.find(x=>x.id===id);
+  return r?(r.n||r.name):'Maintenance task';
+}
+
+/* Board card for an open task. Clicking it opens "Log completed work". */
+function boardCard(t){
+  const v=hasExactVendor(t.trade)?suggestVendors(t.trade)[0]:null;
+  const note=t.status==='overdue'?`<div class="bCardN bad">${Math.abs(t.days)} day${Math.abs(t.days)===1?'':'s'} late</div>`
+    :t.status==='soon'?`<div class="bCardN warn">${t.days===0?'Due today':'In '+t.days+' day'+(t.days===1?'':'s')}</div>`:'';
+  const when=(t.status==='overdue'?'was due ':'')+fmtWhen(t.due);
+  return `<div class="bCard">
+    <div class="bCardBody">
+      <div class="bCardT">${esc(t.name)}</div>
+      <div class="bCardM">${everyLabel(t.every)} &middot; ${when}</div>
+      ${note}
+      <div class="bCardF">${statusCtl(t)}</div>
+    </div>
+    ${v?`<span class="bAv" title="${esc(v.name)}">${esc(initials(v.name))}</span>`:''}
+  </div>`;
+}
+
+/* Board card for finished work (read-only) */
+function doneCard(c){
+  const v=c.vendorId?S.vendors.find(x=>x.id===c.vendorId):null;
+  const cost=c.cost&&+c.cost?' &middot; $'+(+c.cost).toLocaleString():'';
+  return `<div class="bCard">
+    <div class="bCardBody">
+      <div class="bCardT">${esc(ruleLabel(c.ruleId))}</div>
+      <div class="bCardM">${fmtWhen(c.date)}${cost}</div>
+      <div class="bCardF">${DONE_CHIP}</div>
+    </div>
+    ${v?`<span class="bAv" title="${esc(v.name)}">${esc(initials(v.name))}</span>`:''}
+  </div>`;
+}
+
+function ScheduleBoard(p,sch){
+  const cols=[
+    {cat:'overdue',k:'bad', card:boardCard, empty:'Nothing overdue.'},
+    {cat:'soon',   k:'warn',card:boardCard, empty:'Nothing due in the next 30 days.'},
+    {cat:'future', k:'acc', card:boardCard, empty:'Nothing scheduled.'},
+    {cat:'done',   k:'ok',  card:doneCard,  empty:'Nothing logged in the last 2 weeks.'},
+  ].map(c=>({...c,label:SCH_CATS[c.cat].label,items:catItems(c.cat,p,sch)}));
+  return `<div class="board">${cols.map(c=>{
+    const shown=c.items.slice(0,BOARD_LIMIT), rest=c.items.length-shown.length;
+    const more=rest>0?`<button class="bMore" data-a="schCat" data-k="${c.cat}">${rest} more &middot; see all ${c.label.toLowerCase()}</button>`:'';
+    const add=c.k==='acc'?`<button class="bMore" data-a="addCustom">+ New task</button>`:'';
+    return `<section class="bCol ${c.k}" aria-label="${c.label}">
+      <div class="bColHd"><span class="pill ${c.k}">${c.label}</span><span class="bCount">${c.items.length}</span></div>
+      <div class="bCards">${shown.length?shown.map(c.card).join(''):`<div class="bEmpty">${c.empty}</div>`}${more}${add}</div>
+    </section>`;
+  }).join('')}</div>`;
+}
+
+/* Full page for one column. Overdue is ranked by age: most days late = priority 1. */
+function ScheduleCategory(p,sch){
+  if(!p) return NoProp();
+  const cat=SCH_CATS[schCat]?schCat:'overdue', meta=SCH_CATS[cat];
+  const items=catItems(cat,p,sch);
+  const back=`<div style="margin:-12px 0 20px"><button class="btn sm gho" data-a="schView" data-k="board">&larr; Back to the board</button></div>`;
+  if(!items.length) return back+`<div class="card"><div class="empty"><h3>Nothing here</h3><p>No tasks in ${esc(meta.label.toLowerCase())} right now.</p></div></div>`;
+
+  if(cat==='done'){
+    const total=items.reduce((a,c)=>a+(+c.cost||0),0);
+    return back+`<div class="catSum">
+        <div class="stat ok"><div class="statN">${items.length}</div><div class="statL">Tasks done</div></div>
+        <div class="stat"><div class="statN">$${total.toLocaleString()}</div><div class="statL">Spent</div></div>
+      </div>
+      <div class="prList">
+        <div class="prRow hd"><span></span><span>Task</span><span>Done on</span><span>Cost</span><span>Status</span><span></span></div>
+        ${items.map(c=>{const v=c.vendorId?S.vendors.find(x=>x.id===c.vendorId):null;
+          return `<div class="prRow"><span></span>
+            <div><div class="prName">${esc(ruleLabel(c.ruleId))}</div>${v?`<div class="prSub">${esc(v.name)}</div>`:''}</div>
+            <div class="prDate">${fmt(c.date)}</div>
+            <div class="prDate">${c.cost&&+c.cost?'$'+(+c.cost).toLocaleString():'&mdash;'}</div>
+            <div>${DONE_CHIP}</div><span></span></div>`}).join('')}
+      </div>`;
+  }
+
+  const inProg=items.filter(t=>workStatus(p.id,t)==='progress').length;
+  const maxLate=Math.max(1,...items.map(t=>Math.abs(t.days)));
+  const summary=cat==='overdue'?`<div class="catSum">
+      <div class="stat bad"><div class="statN">${items.length}</div><div class="statL">Overdue</div></div>
+      <div class="stat"><div class="statN">${maxLate}</div><div class="statL">Days late, oldest task</div></div>
+      <div class="stat acc"><div class="statN">${inProg}</div><div class="statL">In progress</div></div>
+    </div>
+    <p style="font-size:14px;color:var(--tx2);margin:-4px 0 14px">Ranked by how late each task is. Priority 1 has waited the longest.</p>`
+    :`<div class="catSum">
+      <div class="stat ${meta.pill}"><div class="statN">${items.length}</div><div class="statL">${esc(meta.label)}</div></div>
+      <div class="stat acc"><div class="statN">${inProg}</div><div class="statL">In progress</div></div>
+    </div>`;
+  const rows=items.map((t,i)=>{
+    const v=hasExactVendor(t.trade)?suggestVendors(t.trade)[0]:null;
+    const sub=[everyLabel(t.every),v?esc(v.name):''].filter(Boolean).join(' &middot; ');
+    const timing=cat==='overdue'
+      ?`<div><div class="lateTx">${Math.abs(t.days)} day${Math.abs(t.days)===1?'':'s'} late</div><div class="lateBar"><i style="width:${Math.max(4,Math.round(Math.abs(t.days)/maxLate*100))}%"></i></div></div>`
+      :`<div class="${cat==='soon'?'soonTx':'prDate'}">${t.days===0?'Due today':'In '+t.days+' day'+(t.days===1?'':'s')}</div>`;
+    return `<div class="prRow">
+      <span class="prRank">${cat==='overdue'?i+1:''}</span>
+      <div><div class="prName">${esc(t.name)}</div><div class="prSub">${sub}</div></div>
+      <div class="prDate"><span class="mLbl">${cat==='overdue'?'Was due':'Due'} </span>${fmt(t.due)}</div>
+      ${timing}
+      <div>${statusCtl(t)}</div>
+      <button class="btn sm" data-a="complete" data-id="${t.ruleId}">Log done</button>
+    </div>`;
+  }).join('');
+  return back+summary+`<div class="prList">
+    <div class="prRow hd"><span>${cat==='overdue'?'Priority':''}</span><span>Task</span><span>${cat==='overdue'?'Was due':'Due'}</span><span>${cat==='overdue'?'How late':'When'}</span><span>Status</span><span></span></div>
+    ${rows}</div>`;
+}
+
 function Schedule(p,sch){
   if(!p) return NoProp();
+  const tabs=`<div class="viewBar">
+    <div class="viewTabs" role="tablist">
+      <button class="viewTab${schView==='board'?' on':''}" role="tab" aria-selected="${schView==='board'}" data-a="schView" data-k="board">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Board</button>
+      <button class="viewTab${schView==='list'?' on':''}" role="tab" aria-selected="${schView==='list'}" data-a="schView" data-k="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>List</button>
+    </div>
+    <button class="btn sm" data-a="exportCsv">Export CSV</button>
+    <button class="btn sm pri" data-a="addCustom">+ New task</button>
+  </div>`;
+  if(schView==='board') return tabs+ScheduleBoard(p,sch);
   const filtered=schFilter==='all'?sch
     :schFilter==='overdue'?sch.filter(x=>x.status==='overdue')
     :schFilter==='90'?sch.filter(x=>x.days<=90)
@@ -1446,14 +1684,12 @@ function Schedule(p,sch){
   const html=Object.keys(groups).map(k=>`<div class="tlMo">${k} &middot; ${groups[k].length}</div>
     ${groups[k].map(taskRow).join('')}`).join('');
 
-  return `<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+  return tabs+`<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
     <div class="segs">
       ${[['all','Everything'],['overdue','Overdue'],['90','Next 90 days'],['year','This year']]
         .map(([k,l])=>`<button class="seg${schFilter===k?' on':''}" data-a="schFilter" data-k="${k}">${l}</button>`).join('')}
     </div>
-    <div style="flex:1"></div>
-    <button class="btn sm" data-a="addCustom">+ Custom item</button>
-    <button class="btn sm" data-a="exportCsv">Export CSV</button>
+
   </div>
   ${filtered.length?html:'<div class="card"><div class="empty"><p>Nothing matches this filter.</p></div></div>'}`;
 }
@@ -2093,6 +2329,17 @@ const ACTIONS={
   switchProp(e,el){ S.activeProp=el.value; commit() },
   setActive(e,el){ S.activeProp=el.dataset.id; view='dash'; commit() },
   schFilter(e,el){ schFilter=el.dataset.k; render() },
+  schView(e,el){ schView=el.dataset.k; if(schView==='list') schFilter='all'; view='sched'; render(); window.scrollTo(0,0) },
+  schCat(e,el){ schCat=el.dataset.k; view='schcat'; render(); window.scrollTo(0,0) },
+  setStatus(e,el){
+    const p=activeProp(), id=el.dataset.id, v=el.value;
+    const t=buildSchedule(p.id).find(x=>x.ruleId===id); if(!t) return;
+    S.taskStatus=S.taskStatus||{};
+    const key=p.id+'|'+id;
+    if(v==='done'){ el.value=workStatus(p.id,t); return completeModal(id) }  // capture date, cost, vendor
+    if(v==='todo') delete S.taskStatus[key]; else S.taskStatus[key]={s:v,due:iso(t.due)};
+    commit(); toast(v==='progress'?'Marked in progress':'Marked not started');
+  },
 
   /* tasks */
   complete(e,el){ completeModal(el.dataset.id) },
@@ -2101,6 +2348,7 @@ const ACTIONS={
     const p=activeProp();
     S.completions.push({id:uid(),propId:p.id,ruleId:val('crule'),date:val('cdate'),
       cost:val('ccost'),vendorId:val('cvendor'),note:val('cnote')});
+    if(S.taskStatus) delete S.taskStatus[p.id+'|'+val('crule')];  // next occurrence starts fresh
     closeModal(); commit(); toast('Logged. Next occurrence scheduled.','ok');
   },
   snooze(e,el){

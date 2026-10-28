@@ -184,6 +184,17 @@ Selected tab: `--hover` pill background, `--tx` text. Others: `--tx3`. A 1px `--
 - Optional small avatar/icon on the right edge of a card (vendor initials or a trade icon) in a 28px circle.
 - Last item in each column: ghost "+ New" row in `--tx3`.
 - Hover card: background `#FAFAF9`. Drag: `--sh-pop`, 2° tilt not allowed (keep it calm).
+- **At most 5 cards per column.** Below them, a ghost link "N more · see all <column>" opens that column's full page (section 7).
+
+### Work status (on a card)
+
+A task has two separate things: **which column it is in** (set by its due date: Overdue, Due this month, Upcoming, Done) and **its work status** (set by the owner).
+
+- Work status options: **Not started** (grey dot) · **In progress** (blue dot) · **Done**.
+- Shown as an outlined drop-down chip, 28px tall: white background, 1px `--line2` border, 4px radius, dot on the left, chevron on the right. In progress gets a faint blue border and blue text. The outline is what keeps it from being mistaken for the filled column pills.
+- Choosing **Done** opens "Log completed work" (date, cost, vendor), never a silent tick.
+- Logging the work resets the next occurrence to Not started.
+- Cards in the Done column show a static "✓ Done" chip instead of the drop-down.
 
 ### List & table rows
 
@@ -220,7 +231,8 @@ A short sentence and one button, centered, in `--tx2`. Optional small line illus
 | Screen | Page icon | Default view | Views offered | Board columns / statuses |
 |---|---|---|---|---|
 | **Dashboard** (Home) | House | Summary cards + "Needs attention" list | — | Overdue, Due soon, Open requests, Walkthroughs due |
-| **Schedule** | Calendar | Board | Board · List · (Calendar later) | ● Overdue (red) · ● Due this month (amber) · ● Upcoming (blue) · ● Done (green) |
+| **Schedule** | Calendar | Board (List on phones) | Board · List · (Calendar later) | ● Overdue (red) · ● Due this month (amber, next 30 days) · ● Upcoming (blue) · ● Done (green, last 2 weeks only). 5 cards per column |
+| **Schedule › column page** | Calendar | Ranked list | — | Opened from "N more". **Overdue tasks**: every overdue task, priority 1 = most days late, with a red lateness bar, status drop-down and "Log done"; summary tiles for count, oldest, in progress. Upcoming / Due this month: soonest first. Done: last 2 weeks with total spent. Breadcrumb links back to the board |
 | **Requests** | Inbox | Board | Board · List | ● New (red) · ● In progress (amber) · ● Waiting on vendor (blue) · ● Closed (green) |
 | **Walkthroughs** | Clipboard | List | List · Board | ● Scheduled (purple) · ● In progress (amber) · ● Complete (green) |
 | **Properties** | Building | Cards (one per property) | Cards · Table | — |
@@ -335,13 +347,13 @@ Replace the current `:root{…}` block at the top of `index.html` with this. Exi
 
 ## 14. What it takes to apply this (checklist)
 
-1. **Swap the colour tokens** (section 13). Biggest visual change, about 10 minutes, low risk.
-2. **Sidebar:** remove coloured icon squares and the gradient logo glow; selected item becomes grey instead of coral; group properties under a "Properties" label.
-3. **Page headers:** add the big page title + optional icon + view-tabs row with the **New ▾** button on the right.
-4. **Status pills:** one shared pill style for every status listed in section 7; replace any coloured badges.
-5. **Board view** for Schedule and Requests (List stays available).
+1. ✓ **Swap the colour tokens** (section 13). Biggest visual change, about 10 minutes, low risk.
+2. ✓ **Sidebar:** remove coloured icon squares and the gradient logo glow; selected item becomes grey instead of coral; group properties under a "Properties" label.
+3. ✓ **Page headers:** add the big page title + optional icon + view-tabs row with the **New ▾** button on the right.
+4. ✓ **Status pills:** one shared pill style for every status listed in section 7; replace any coloured badges.
+5. **Board view** for Schedule ✓ (done, with work status and column pages) and Requests (to do). List stays available.
 6. **Buttons & inputs:** restyle to the specs in section 6.
 7. **Phone pass:** check every screen at 375px wide (drawer sidebar, one-column board, 44px tap targets).
 8. **Check:** contrast, focus rings, and that status words match everywhere.
 
-Steps 1–4 deliver about 80% of the new look in one working session.
+Steps 1–4 deliver about 80% of the new look in one working session. Steps 1–4 and the Schedule board are done.
