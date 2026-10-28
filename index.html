@@ -216,6 +216,25 @@ select.inp{cursor:pointer}
 .optT{font-size:14px;font-weight:500;line-height:1.3}
 .optD{font-size:12.5px;color:var(--tx3);margin-top:2px;line-height:1.35}
 
+/* ---------- quick tour (runs once, right after setup) ---------- */
+.tourCard{
+  position:fixed;right:24px;bottom:24px;z-index:95;width:340px;max-width:calc(100vw - 32px);
+  background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh-pop);padding:18px 18px 14px;
+  animation:pop .15s ease-out;
+}
+.tourStep{font-size:12px;color:var(--tx3);margin-bottom:4px}
+.tourT{font-size:17px;font-weight:600;line-height:1.3;margin-bottom:6px}
+.tourP{font-size:13.5px;color:var(--tx2);line-height:1.5}
+.tourP+.tourP{margin-top:8px}
+.tourDots{display:flex;gap:5px;margin:14px 0 12px}
+.tourDots i{flex:1;height:3px;border-radius:3px;background:var(--line)}
+.tourDots i.on{background:var(--acc)} .tourDots i.done{background:var(--ok)}
+.tourNav{display:flex;gap:8px;align-items:center}
+.tourHi{outline:2px solid var(--acc);outline-offset:3px;border-radius:var(--r);animation:tourPulse 1.4s ease-in-out 2}
+@keyframes tourPulse{50%{outline-offset:6px}}
+.content.touring{padding-bottom:300px}
+@media(max-width:900px){ .tourCard{left:16px;right:16px;bottom:16px;width:auto;max-width:none} }
+
 /* ---------- modal ---------- */
 .modalBg{
   position:fixed;inset:0;background:rgba(15,15,15,.4);
@@ -668,6 +687,7 @@ let authMsg='';
 function blankState(){
   return {
     onboarded:false, demo:false, role:'owner',
+    toured:false,   // has this owner seen the quick tour that follows setup
     owner:{name:'',email:''},
     properties:[], activeProp:null, activeWalk:null,
     vendors:[], appliances:[], completions:[], requests:[], custom:[], walkthroughs:[],
@@ -682,6 +702,9 @@ function blankState(){
 function migrate(s){
   if(!s||typeof s!=='object') return blankState();
   const base=blankState();
+  // Owners who finished setup before the tour existed should not be shown it
+  // the next time they add a property. They can replay it from Settings.
+  if(s.toured===undefined) s.toured=!!s.onboarded;
   Object.keys(base).forEach(k=>{
     if(s[k]===undefined) s[k]=Array.isArray(base[k])?[]:base[k];
   });
@@ -695,6 +718,7 @@ function migrate(s){
 let S = migrate(DB.load());
 let view = S.onboarded ? 'dash' : 'landing';
 let wizStep = 0, wizDraft = null, guestCtx=null;
+let tour = null;   // null = no tour showing, otherwise the index into TOUR
 
 function commit(){ DB.save(S); render(); }
 
@@ -1060,9 +1084,69 @@ function render(){
   }
 
   if(view==='wizard'){ R.innerHTML=Wizard(); return bind(); }
-  R.innerHTML=Shell();
+  // If the owner clicks away to a page the tour covers, follow them to that
+  // step. Anywhere else, the tour quietly closes rather than showing the
+  // wrong page's explanation.
+  if(tour!==null){ const i=TOUR.findIndex(t=>t.view===view); tour=i<0?null:i }
+  R.innerHTML=Shell()+(tour!==null?TourCard():'');
   bind();
+  if(tour!==null) tourHighlight();
 }
+
+/* ---------- quick tour ------------------------------------
+   Runs once, straight after the setup wizard. Each step opens the real page
+   and outlines the button it is talking about, so the owner learns where
+   things are by seeing them, not by reading about them.
+----------------------------------------------------------- */
+const TOUR=[
+  {view:'dash', hi:['[data-nav="dash"]'],
+   t:'Your schedule is ready',
+   p:['PropertyPulse built a maintenance plan from your setup answers. Home shows what is past due and what is coming up this month.',
+      'This quick tour shows the three pages you will use most.']},
+  {view:'sched', hi:['[data-nav="sched"]','.viewTabs'],
+   t:'Maintenance schedule',
+   p:['Every recurring task for this property lives here, sorted into Overdue, Due this month, Upcoming and Done.',
+      'When the work is done, mark it done. The next due date moves forward on its own.']},
+  {view:'appl', hi:['[data-nav="appl"]','[data-a="addAppl"]'],
+   t:'Add your appliances here',
+   p:['This is where you add your appliances and systems: fridge, water heater, AC units and so on.',
+      'Anything you picked during setup is already listed. Use <b>+ Add</b> for anything else, and fill in brand, model and install year so the app can warn you before something wears out.']},
+  {view:'vendors', hi:['[data-nav="vendors"]','[data-a="addVendor"]'],
+   t:'Add your vendors here',
+   p:['This is where you add your vendors: plumber, electrician, pool tech, handyman.',
+      'Use <b>+ Add vendor</b> and pick their trades. PropertyPulse then suggests who to call for each task and flags any trade nobody covers yet.']},
+];
+
+function TourCard(){
+  const st=TOUR[tour], last=tour===TOUR.length-1;
+  return `<div class="tourCard" role="dialog" aria-label="Quick tour">
+    <div class="tourStep">Quick tour &middot; ${tour+1} of ${TOUR.length}</div>
+    <div class="tourT">${st.t}</div>
+    ${st.p.map(x=>`<p class="tourP">${x}</p>`).join('')}
+    <div class="tourDots">${TOUR.map((_,i)=>`<i class="${i<tour?'done':i===tour?'on':''}"></i>`).join('')}</div>
+    <div class="tourNav">
+      <button class="btn sm gho" data-a="tourEnd">Skip tour</button>
+      <div style="flex:1"></div>
+      ${tour>0?'<button class="btn sm" data-a="tourBack">Back</button>':''}
+      <button class="btn sm pri" data-a="tourNext">${last?'Finish':'Next'}</button>
+    </div></div>`;
+}
+function tourHighlight(){
+  TOUR[tour].hi.forEach(sel=>document.querySelectorAll(sel).forEach(el=>el.classList.add('tourHi')));
+  const c=document.querySelector('.content'); if(c) c.classList.add('touring');
+}
+function tourGo(i){
+  tour=i; view=TOUR[i].view; render(); window.scrollTo(0,0);
+  // On a phone the button being pointed at can sit below the tour card.
+  // Scroll it up into the clear part of the screen.
+  const els=document.querySelectorAll('.content .tourHi'), el=els[els.length-1];
+  if(!el) return;
+  const top=el.getBoundingClientRect().top;
+  if(top>innerHeight*0.4) window.scrollTo(0,top+scrollY-innerHeight*0.25);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&tour!==null&&!MR.innerHTML.trim()) ACTIONS.tourEnd();
+});
 
 /* ---------- sign in / create account ---------------------- */
 function Auth(){
@@ -1401,7 +1485,11 @@ function Wizard(){
     <div class="wizSteps">${bars}</div>
     ${body}
     <div class="wizNav">
-      <button class="btn gho" data-a="${wizStep===0?'cancelWiz':'wizBack'}">${wizStep===0?'Cancel':'&larr; Back'}</button>
+      ${wizStep>0?'<button class="btn gho" data-a="wizBack">&larr; Back</button>'
+        // First-time owners have nothing to go back to, so setup is the only
+        // way forward. Signing out is the one exit.
+        :S.onboarded?'<button class="btn gho" data-a="cancelWiz">Cancel</button>'
+        :'<button class="btn gho" data-a="signOut">Sign out</button>'}
       <button class="btn pri" data-a="${isLast?'wizFinish':'wizNext'}">${isLast?'Build my schedule':'Continue &rarr;'}</button>
     </div>
   </div></div>`;
@@ -2005,6 +2093,11 @@ function Settings(){
   </div>
   ${storageCard()}
   <div class="card">
+    <div class="cardHd"><div><div class="cardTitle">Quick tour</div>
+      <div class="cardSub">A one-minute look at the schedule, appliances and vendors pages</div></div>
+      <div style="flex:1"></div><button class="btn sm" data-a="tourStart">Replay tour</button></div>
+  </div>
+  <div class="card">
     <div class="cardHd"><div><div class="cardTitle">Data</div></div></div>
     <div style="display:flex;gap:9px;flex-wrap:wrap">
       <button class="btn" data-a="exportJson">Export all data</button>
@@ -2322,7 +2415,21 @@ const ACTIONS={
     });
     d.vendors.forEach(v=>S.vendors.push({...v,id:uid()}));
     S.activeProp=d.id; S.onboarded=true; wizDraft=null; wizStep=0; view='dash';
-    commit(); toast('Schedule built','ok');
+    // First property ever: walk the owner through the app. Marked as seen
+    // up front so a reload mid-tour does not start it again.
+    if(!S.toured){ S.toured=true; tour=0 }
+    commit();
+    // The tour's first card already says the schedule is ready.
+    if(tour===null) toast('Schedule built','ok');
+  },
+
+  /* quick tour */
+  tourStart(){ tourGo(0) },
+  tourNext(){ if(tour===null) return; if(tour>=TOUR.length-1) return ACTIONS.tourEnd(true); tourGo(tour+1) },
+  tourBack(){ if(tour>0) tourGo(tour-1) },
+  tourEnd(finished){
+    tour=null; view='dash'; render(); window.scrollTo(0,0);
+    toast(finished===true?'You are all set':'Tour closed. You can replay it from Settings.','ok');
   },
 
   /* nav + filters */
